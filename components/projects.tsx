@@ -47,7 +47,7 @@ export function Projects() {
             >
               <div className="w-full h-40 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg mb-6 flex items-center justify-center group-hover:from-primary/30 group-hover:to-accent/30 transition-colors">
                 <span className="text-6xl">
-                  <Image src={project.image} width={100} height={100} />
+                  <Image src={project.image} width={100} height={100} alt={project.image} />
                 </span>
               </div>
               <h3 className="text-xl font-semibold mb-2 text-foreground group-hover:text-accent transition-colors">
