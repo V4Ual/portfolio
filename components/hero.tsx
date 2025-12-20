@@ -37,12 +37,11 @@ export function Hero() {
             </a>
           </div>
         </div>
-        <div className="relative">
-          <div className="w-full  rounded-2xl bg-gradient-to-br from-primary/30 to-accent/30 border border-border flex items-center justify-center">
+        <div className="">
+          <div className="w-full  rounded-2xl flex items-center justify-center">
             <div className="text-center">
               <img src="/photo.png" />
-              {/* <div className="text-6xl mb-4">👨‍💻</div>
-              <p className="text-muted-foreground">Your professional photo</p> */}
+  
             </div>
           </div>
         </div>
