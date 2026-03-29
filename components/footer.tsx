@@ -97,7 +97,7 @@ export function Footer() {
           </div>
         </div>
         <div className="border-t border-border pt-8 text-center text-muted-foreground text-sm">
-          <p>&copy; {year} MERN Full-Stack Developer. All rights reserved. | Designed & Built with React & Node.js</p>
+          <p>&copy; {year} Vishal Sharma — MERN Stack Developer. All rights reserved.</p>
         </div>
       </div>
     </footer>
