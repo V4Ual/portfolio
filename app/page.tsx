@@ -1,27 +1,23 @@
-import { Navigation } from "@/components/navigation"
-import { Hero } from "@/components/hero"
-import { About } from "@/components/about"
-import { Skills } from "@/components/skills"
-import { Projects } from "@/components/projects"
-import { Experience } from "@/components/experience"
-import { Testimonials } from "@/components/testimonials"
-import { Blog } from "@/components/blog"
-import { Contact } from "@/components/contact"
-import { Footer } from "@/components/footer"
+import { Navigation } from "@/components/navigation";
+import { Hero } from "@/components/hero";
+import { About } from "@/components/about";
+import { Skills } from "@/components/skills";
+import { Projects } from "@/components/projects";
+import { Experience } from "@/components/experience";
+import { Contact } from "@/components/contact";
+import { Footer } from "@/components/footer";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main className="relative min-h-screen bg-background text-foreground overflow-x-hidden bg-ambient-mesh">
       <Navigation />
       <Hero />
       <About />
       <Skills />
       <Projects />
       <Experience />
-      {/* <Testimonials /> */}
-      {/* <Blog />   */}
       <Contact />
       <Footer />
     </main>
-  )
+  );
 }

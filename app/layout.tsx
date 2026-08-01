@@ -7,29 +7,73 @@ import "./globals.css"
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+}
+
 export const metadata: Metadata = {
-  title: "MERN Full-Stack Developer | Portfolio",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"),
+  title: {
+    default: "PERN Full-Stack Developer | Vishal Sharma Portfolio",
+    template: "%s | Vishal Sharma",
+  },
   description:
-    "Professional portfolio of a MERN stack developer showcasing projects, skills, experience, and expertise in MongoDB, Express.js, React.js, and Node.js",
-  keywords: "MERN, Full-Stack Developer, React, Node.js, MongoDB, Express.js, Web Development",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
-  // generator: "v0.app",
+    "Professional portfolio of a PERN stack developer showcasing projects, skills, experience, and expertise in PostgreSQL, Express.js, React.js, and Node.js",
+  keywords: ["PERN", "Full-Stack Developer", "React", "Node.js", "PostgreSQL", "Express.js", "Web Development"],
+  authors: [{ name: "Vishal Sharma" }],
+  creator: "Vishal Sharma",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "/",
+    title: "PERN Full-Stack Developer | Vishal Sharma Portfolio",
+    description: "Professional portfolio of a PERN stack developer showcasing projects, skills, experience, and expertise in PostgreSQL, Express.js, React.js, and Node.js",
+    siteName: "Vishal Sharma Portfolio",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "Vishal Sharma Portfolio",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PERN Full-Stack Developer | Vishal Sharma Portfolio",
+    description: "Professional portfolio of a PERN stack developer showcasing projects, skills, experience, and expertise in PostgreSQL, Express.js, React.js, and Node.js",
+    images: ["/logo.png"],
+    creator: "@vishalsharma",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   icons: {
     icon: [
       {
-        url: "/logo.png",
+        url: "/icon-light-32x32.png",
         media: "(prefers-color-scheme: light)",
       },
       {
-        url: "/logo.png",
+        url: "/icon-dark-32x32.png",
         media: "(prefers-color-scheme: dark)",
       },
       {
-        url: "/logo.svg",
+        url: "/icon.svg",
         type: "image/svg+xml",
       },
     ],
-    apple: "/logo.png",
+    apple: "/apple-icon.png",
   },
 }
 

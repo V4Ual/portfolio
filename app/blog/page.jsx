@@ -1,5 +1,15 @@
 import BlogList, { Blog } from "../../components/BlogList";
 
+export const metadata = {
+  title: "Blog",
+  description: "Read my latest thoughts on Web Development, Next.js, React, and the PERN stack.",
+  openGraph: {
+    title: "Blog | Vishal Sharma",
+    description: "Read my latest thoughts on Web Development, Next.js, React, and the PERN stack.",
+    url: "/blog",
+  },
+};
+
 // import BlogList from "../../components/BlogList";
 
 export default function BlogLayout({ children }) {

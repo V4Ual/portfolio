@@ -1,122 +1,161 @@
-"use client"
+"use client";
 
-import { Github, Linkedin, Mail } from "lucide-react"
-import type React from "react"
-import { useState } from "react"
+import React, { useState } from "react";
+import { motion } from "motion/react";
+import { SpotlightCard } from "./reactbits/SpotlightCard";
+import { DecryptedText } from "./reactbits/DecryptedText";
+import { MagnetButton } from "./reactbits/MagnetButton";
+import { StarBorder } from "./reactbits/StarBorder";
+import { Mail, Linkedin, Github, Copy, Check, Send, Sparkles, MessageSquare } from "lucide-react";
 
 export function Contact() {
-  const [formData, setFormData] = useState({ name: "", email: "", message: "" })
-  const [submitted, setSubmitted] = useState(false)
+  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+  const [submitted, setSubmitted] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
+
+  const handleCopyEmail = () => {
+    navigator.clipboard.writeText("visrma53@gmail.com");
+    setCopiedEmail(true);
+    setTimeout(() => setCopiedEmail(false), 2500);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitted(true)
+    e.preventDefault();
+    if (!formData.name || !formData.email || !formData.message) return;
+    setSubmitted(true);
     setTimeout(() => {
-      setFormData({ name: "", email: "", message: "" })
-      setSubmitted(false)
-    }, 2000)
-  }
+      setFormData({ name: "", email: "", message: "" });
+      setSubmitted(false);
+    }, 3000);
+  };
+
+  const contactCards = [
+    {
+      title: "Email Address",
+      value: "visrma53@gmail.com",
+      actionLabel: copiedEmail ? "Copied to Clipboard! ✓" : "Click to Copy Email",
+      icon: Mail,
+      onClick: handleCopyEmail,
+      link: "mailto:visrma53@gmail.com",
+    },
+    {
+      title: "LinkedIn Profile",
+      value: "vishal-sharma",
+      actionLabel: "Connect on LinkedIn ↗",
+      icon: Linkedin,
+      link: "https://www.linkedin.com/in/vishal-sharma-6639a322a/",
+    },
+    {
+      title: "GitHub Repository",
+      value: "V4Ual",
+      actionLabel: "View Repositories ↗",
+      icon: Github,
+      link: "https://github.com/V4Ual",
+    },
+  ];
 
   return (
-    <section id="contact" className="py-20 px-6">
-      <div className="max-w-2xl mx-auto">
-        <h2 className="text-4xl font-bold mb-4 text-center">Get In Touch</h2>
-        <p className="text-center text-muted-foreground mb-12">
-          I'm always interested in hearing about new projects and opportunities. Let's connect!
-        </p>
+    <section id="contact" className="py-24 px-6 relative overflow-hidden">
+      <div className="max-w-4xl mx-auto space-y-16">
+        {/* HEADING */}
+        <div className="text-center max-w-2xl mx-auto space-y-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <span className="text-accent text-sm font-semibold tracking-widest uppercase">
+              // Let's Build Something Great
+            </span>
+          </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          <div className="p-4 rounded-lg border border-border text-center hover:bg-card transition-colors">
-            <div className="flex justify-center">
-              <Mail className="text-center" />
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-4xl sm:text-5xl font-extrabold tracking-tight"
+          >
+            Get In{" "}
+            <DecryptedText
+              text="Touch"
+              speed={40}
+              maxIterations={10}
+              animateOn="view"
+              className="bg-gradient-to-r from-accent via-cyan-300 to-primary bg-clip-text text-transparent"
+            />
+          </motion.h2>
 
-            </div>
-
-            <p className="font-semibold text-foreground mb-1">Email</p>
-            <a href="mailto:hello@example.com" className="text-accent hover:underline text-sm">
-              visrma53@gmail.com
-            </a>
-          </div>
-          <div className="p-4 rounded-lg border border-border text-center hover:bg-card transition-colors">
-            <div className="flex justify-center">
-              <Linkedin className="text-center" />
-            </div>
-            <p className="font-semibold text-foreground mb-1">LinkedIn</p>
-            <a
-              href="https://www.linkedin.com/in/vishal-sharma-6639a322a/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent hover:underline text-sm"
-            >
-              vishal-sharma
-            </a>
-          </div>
-          <div className="p-4 rounded-lg border border-border text-center hover:bg-card transition-colors">
-            <div className="flex justify-center">
-              <Github className="text-center" />
-            </div>
-            <p className="font-semibold text-foreground mb-1">GitHub</p>
-            <a
-              href="https://github.com/V4Ual"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent hover:underline text-sm"
-            >
-              V4Ual
-            </a>
-          </div>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="text-muted-foreground text-lg"
+          >
+            Whether you have a project in mind, an opportunity to discuss, or just want to connect — feel free to drop a message!
+          </motion.p>
         </div>
 
-        {/* <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium mb-2">Name</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:border-accent outline-none transition-colors"
-              placeholder="Your name"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:border-accent outline-none transition-colors"
-              placeholder="your@email.com"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Message</label>
-            <textarea
-              name="message"
-              value={formData.message}
-              onChange={handleChange}
-              rows={5}
-              className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:border-accent outline-none transition-colors resize-none"
-              placeholder="Tell me about your project..."
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full px-6 py-3 bg-accent text-accent-foreground font-semibold rounded-lg hover:opacity-90 transition-opacity"
-          >
-            {submitted ? "Message Sent! ✓" : "Send Message"}
-          </button>
-        </form> */}
+        {/* QUICK CONTACT CARDS */}
+        <div className="grid sm:grid-cols-3 gap-6">
+          {contactCards.map((card, idx) => {
+            const Icon = card.icon;
+            return (
+              <motion.div
+                key={card.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: idx * 0.1 }}
+              >
+                <SpotlightCard className="p-6 h-full flex flex-col justify-between text-center space-y-4 border border-border/80 bg-card/60 group hover:border-accent/60 transition-all">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="p-3.5 rounded-2xl bg-accent/10 border border-accent/30 text-accent group-hover:scale-110 transition-transform">
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-foreground text-base">
+                        {card.title}
+                      </h3>
+                      <p className="text-accent text-sm font-mono mt-0.5">
+                        {card.value}
+                      </p>
+                    </div>
+                  </div>
+
+                  {card.onClick ? (
+                    <button
+                      onClick={card.onClick}
+                      className="text-xs font-semibold text-muted-foreground group-hover:text-accent hover:underline flex items-center justify-center gap-1.5 transition-colors"
+                    >
+                      {copiedEmail ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{card.actionLabel}</span>
+                    </button>
+                  ) : (
+                    <a
+                      href={card.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold text-muted-foreground group-hover:text-accent hover:underline transition-colors"
+                    >
+                      {card.actionLabel}
+                    </a>
+                  )}
+                </SpotlightCard>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* INTERACTIVE FORM */}
+
       </div>
     </section>
-  )
+  );
 }
