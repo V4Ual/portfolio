@@ -18,7 +18,7 @@ export function Hero() {
 
   const stats = [
     { value: "3+", label: "Years Experience", icon: Terminal },
-    { value: "5+", label: "Projects Completed", icon: Code },
+    { value: "6+", label: "Projects Completed", icon: Code },
     { value: "100%", label: "Code Quality", icon: Cpu },
   ];
 

@@ -45,11 +45,10 @@ export function Navigation() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 px-4 py-4 transition-all duration-300">
       <nav
-        className={`max-w-5xl mx-auto rounded-full px-6 py-3 transition-all duration-300 flex items-center justify-between border ${
-          scrolled
-            ? "bg-background/90 backdrop-blur-xl border-border/80 shadow-2xl shadow-black/40"
-            : "bg-background/50 backdrop-blur-md border-border/40"
-        }`}
+        className={`max-w-5xl mx-auto rounded-full px-6 py-3 transition-all duration-300 flex items-center justify-between border ${scrolled
+          ? "bg-background/90 backdrop-blur-xl border-border/80 shadow-2xl shadow-black/40"
+          : "bg-background/50 backdrop-blur-md border-border/40"
+          }`}
       >
         {/* LOGO */}
         <Link href="#" className="flex items-center gap-2.5 group">
@@ -69,11 +68,10 @@ export function Navigation() {
               <a
                 key={item.label}
                 href={item.href}
-                className={`relative px-4 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? "text-foreground font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                className={`relative px-4 py-1 rounded-full text-sm font-medium transition-all duration-200 ${isActive
+                  ? "text-foreground font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+                  }`}
               >
                 {isActive && (
                   <motion.div
@@ -91,7 +89,7 @@ export function Navigation() {
         {/* ACTIONS */}
         <div className="hidden md:flex items-center gap-3">
           <a
-            href="/resume.pdf"
+            href="/Vishal_Sharma_MERN.pdf"
             target="_blank"
             rel="noopener noreferrer"
             className="group relative inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-accent text-accent-foreground font-semibold text-xs tracking-wide shadow-md shadow-accent/15 hover:opacity-90 transition-all duration-200"
@@ -134,7 +132,7 @@ export function Navigation() {
                 </a>
               ))}
               <a
-                href="/resume.pdf"
+                href="/Vishal_Sharma_MERN.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setIsOpen(false)}

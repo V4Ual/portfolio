@@ -33,7 +33,7 @@ export function Projects() {
   const projects: Project[] = [
     {
       id: 1,
-      title: "Telephonez Apple Device Hub",
+      title: "Telephonez",
       category: "E-Commerce & Service Hub",
       description:
         "Full-service Apple web application for buying certified pre-owned iPhones/iPads, trade-in device sales, and device repair bookings.",
@@ -51,7 +51,7 @@ export function Projects() {
     },
     {
       id: 2,
-      title: "AlmondStay Luxury Villa Booking",
+      title: "AlmondStay",
       category: "Hospitality & Vacation Rental SaaS",
       description:
         "Luxury private farmhouse and villa stay booking platform for family vacations, corporate retreats, and weekend getaways.",
@@ -119,6 +119,24 @@ export function Projects() {
         "Persistent cart and wishlist state management",
         "Optimized image loading and smooth checkout workflow",
         "Interactive controller customizer showcase",
+      ],
+    },
+    {
+      id: 6,
+      title: "Liveza Real-Time Video Chat",
+      category: "WebRTC & Real-Time Communication",
+      description:
+        "Instant 1-on-1 live random video chat web application with anonymous matchmaking, crystal-clear HD video/audio streaming, and WebRTC peer-to-peer protocols.",
+      longDescription:
+        "Liveza is a modern, anonymous live video communication platform connecting users worldwide for real-time 1-on-1 interactions. Engineered with low-latency WebRTC peer connections and real-time WebSocket signaling, the platform delivers high-definition video/audio streaming without registration requirements, with integrated responsive controls and seamless mobile-browser optimization.",
+      tags: ["WebRTC", "Socket.io", "React", "Node.js", "Express.js", "Tailwind CSS"],
+      live: "https://liveza.fun/",
+      image: "/liveza.jpg",
+      highlights: [
+        "Low-latency WebRTC peer-to-peer audio and HD video streaming",
+        "Instant stranger matchmaking powered by real-time WebSocket signaling",
+        "100% anonymous calling with zero signup or authentication barrier",
+        "Adaptive mobile-first layout with interactive camera & mic permission controls",
       ],
     },
   ];
