@@ -35,9 +35,10 @@ export function Experience() {
       description:
         "Delivered custom PERN stack solutions for international and domestic enterprise clients.",
       achievements: [
-        "Built and deployed custom e-commerce engines and administrative control dashboards.",
-        "Managed the full software development lifecycle from initial architecture to AWS cloud deployment.",
-        "Integrated third-party payment gateways (Stripe), email providers, and web sockets.",
+        "Developed and managed a POS (Point of Sale) system with inventory management, sales tracking, and order processing.",
+        "Built administrative dashboards to manage products, stock levels, transactions, and franchise operations.",
+        "Developed and optimized REST APIs using Node.js, Express.js, and MySQL to support reliable POS and inventory workflows.",
+        "Managed backend architecture, database design, and end-to-end application development to improve operational efficiency."
       ],
       skills: ["Next.js", "React", "Node.js", "Stripe", "AWS S3", "Tailwind CSS"],
     },
@@ -51,7 +52,7 @@ export function Experience() {
       description:
         "Specialized in backend service architecture, REST API engineering, and database optimization.",
       achievements: [
-        "Developed high-throughput Node.js microservices serving thousands of active concurrent requests.",
+        // "Developed high-throughput Node.js microservices serving thousands of active concurrent requests.",
         "Designed relational database schemas (MySQL, PostgreSQL) with optimized indexing strategies.",
         "Built OAuth2 authentication, JWT security layers, and rate-limiting middleware.",
         "Managed cloud server infrastructure, Docker deployment, and Nginx reverse proxy configuration.",

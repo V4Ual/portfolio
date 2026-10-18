@@ -89,7 +89,7 @@ export function Navigation() {
         {/* ACTIONS */}
         <div className="hidden md:flex items-center gap-3">
           <a
-            href="/Vishal_Sharma_MERN.pdf"
+            href="/Vishal_Sharma_MERN.pdf?v=2"
             target="_blank"
             rel="noopener noreferrer"
             className="group relative inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-accent text-accent-foreground font-semibold text-xs tracking-wide shadow-md shadow-accent/15 hover:opacity-90 transition-all duration-200"
@@ -132,7 +132,7 @@ export function Navigation() {
                 </a>
               ))}
               <a
-                href="/Vishal_Sharma_MERN.pdf"
+                href="/Vishal_Sharma_MERN.pdf?v=2"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setIsOpen(false)}
