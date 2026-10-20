@@ -11,6 +11,7 @@ import {
 } from "@/app/actions/blog";
 import { slugify } from "@/lib/utils";
 import TiptapEditor from "./TiptapEditor";
+import { ArticleCodeEnhancer } from "@/components/ArticleCodeEnhancer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,7 +75,7 @@ export default function PostEditor({ initialData }: PostEditorProps) {
   const [excerpt, setExcerpt] = useState(initialData?.excerpt || "");
   const [content, setContent] = useState(
     initialData?.content ||
-      `<h2>Introduction</h2><p>Write your technical article here using the rich text editor. You can format headings, lists, blockquotes, code blocks, and upload images directly to PostgreSQL.</p>`
+    `<h2>Introduction</h2><p>Write your technical article here using the rich text editor. You can format headings, lists, blockquotes, code blocks, and upload images directly to PostgreSQL.</p>`
   );
   const [coverImage, setCoverImage] = useState(initialData?.coverImage || "");
   const [categoryName, setCategoryName] = useState(initialData?.categoryName || "");
@@ -237,43 +238,62 @@ export default function PostEditor({ initialData }: PostEditorProps) {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-28">
-      {/* Sticky Top Header with Actions */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/80 pb-5 sticky top-16 bg-background/95 backdrop-blur-md z-30 pt-2">
-        <div className="flex items-center gap-3">
+      {/* Sleek Floating Glassmorphic Top Action Bar */}
+      <div className="sticky top-20 z-30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 rounded-2xl border border-border/80 bg-card/85 backdrop-blur-xl shadow-lg shadow-black/10 transition-all">
+        <div className="flex items-center gap-3.5 min-w-0">
           <Link
             href="/admin/posts"
-            className="p-2 rounded-xl border border-border/80 bg-card/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-all shadow-xs"
+            className="p-2.5 rounded-xl border border-border/70 bg-background/70 hover:bg-muted text-muted-foreground hover:text-foreground transition-all shadow-xs shrink-0"
             title="Back to Articles"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4" />
           </Link>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h1 className="text-lg sm:text-xl font-black text-foreground tracking-tight truncate">
                 {isEditing ? "Edit Article" : "Create New Article"}
               </h1>
               <span
-                className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider border ${
+                className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider border inline-flex items-center gap-1.5 ${
                   status === "PUBLISHED"
-                    ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                    ? "bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 border-emerald-500/30"
                     : status === "UNPUBLISHED"
-                    ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30"
-                    : "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30"
+                    ? "bg-amber-500/15 text-amber-500 dark:text-amber-400 border-amber-500/30"
+                    : "bg-blue-500/15 text-blue-500 dark:text-blue-400 border-blue-500/30"
                 }`}
               >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    status === "PUBLISHED"
+                      ? "bg-emerald-500 animate-pulse"
+                      : status === "UNPUBLISHED"
+                      ? "bg-amber-500"
+                      : "bg-blue-500"
+                  }`}
+                />
                 {status}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              PostgreSQL buffer storage &bull; Tiptap WYSIWYG &bull; Instant sync
+            <p className="text-[11px] text-muted-foreground font-mono flex items-center gap-1.5 mt-0.5">
+              <span>PostgreSQL buffer storage</span>
+              <span>&bull;</span>
+              <span>Tiptap WYSIWYG</span>
+              <span>&bull;</span>
+              <span>Instant sync</span>
             </p>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto shrink-0">
           <Link href="/admin/posts">
-            <Button variant="ghost" size="sm" type="button" disabled={isSubmitting} className="rounded-xl">
+            <Button
+              variant="ghost"
+              size="sm"
+              type="button"
+              disabled={isSubmitting}
+              className="rounded-xl text-xs text-muted-foreground hover:text-foreground font-semibold px-3 h-9"
+            >
               Cancel
             </Button>
           </Link>
@@ -285,7 +305,7 @@ export default function PostEditor({ initialData }: PostEditorProps) {
                 variant="outline"
                 size="sm"
                 type="button"
-                className="gap-1.5 text-xs text-accent hover:border-accent rounded-xl shadow-xs"
+                className="gap-1.5 text-xs text-accent hover:border-accent hover:bg-accent/10 rounded-xl shadow-xs h-9 font-semibold"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span>View Live</span>
@@ -299,9 +319,9 @@ export default function PostEditor({ initialData }: PostEditorProps) {
             variant="outline"
             size="sm"
             onClick={() => setPreviewOpen(true)}
-            className="gap-1.5 rounded-xl shadow-xs"
+            className="gap-1.5 rounded-xl shadow-xs border-border/80 bg-background/80 hover:bg-muted text-foreground text-xs font-semibold h-9"
           >
-            <Eye className="w-4 h-4 text-accent" />
+            <Eye className="w-3.5 h-3.5 text-accent" />
             <span>Preview</span>
           </Button>
 
@@ -312,9 +332,9 @@ export default function PostEditor({ initialData }: PostEditorProps) {
             size="sm"
             disabled={isSubmitting}
             onClick={() => handleSubmit("DRAFT")}
-            className="gap-1.5 rounded-xl shadow-xs"
+            className="gap-1.5 rounded-xl shadow-xs border-border/80 bg-background/80 hover:bg-muted text-foreground text-xs font-semibold h-9"
           >
-            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             <span>Save Draft</span>
           </Button>
 
@@ -326,9 +346,9 @@ export default function PostEditor({ initialData }: PostEditorProps) {
               size="sm"
               disabled={isSubmitting}
               onClick={() => handleSubmit("UNPUBLISHED")}
-              className="gap-1.5 text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 rounded-xl"
+              className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 border-amber-500/30 rounded-xl h-9 text-xs font-semibold"
             >
-              <EyeOff className="w-4 h-4" />
+              <EyeOff className="w-3.5 h-3.5" />
               <span>Unpublish</span>
             </Button>
           )}
@@ -339,9 +359,9 @@ export default function PostEditor({ initialData }: PostEditorProps) {
             size="sm"
             disabled={isSubmitting}
             onClick={() => handleSubmit("PUBLISHED")}
-            className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-600/20"
+            className="gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-md shadow-emerald-600/25 h-9 text-xs active:scale-95 transition-all"
           >
-            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
             <span>{status === "PUBLISHED" ? "Update Article" : "Publish to Public Blog"}</span>
           </Button>
 
@@ -353,7 +373,7 @@ export default function PostEditor({ initialData }: PostEditorProps) {
               size="icon"
               disabled={isSubmitting}
               onClick={handleDelete}
-              className="text-destructive hover:bg-destructive/10 rounded-xl"
+              className="text-destructive hover:bg-destructive/15 rounded-xl h-9 w-9"
               title="Delete Article"
             >
               <Trash2 className="w-4 h-4" />
@@ -438,9 +458,8 @@ export default function PostEditor({ initialData }: PostEditorProps) {
                 Article Summary / Excerpt *
               </Label>
               <span
-                className={`text-[11px] font-mono ${
-                  excerpt.length > 160 ? "text-amber-500 font-semibold" : "text-muted-foreground"
-                }`}
+                className={`text-[11px] font-mono ${excerpt.length > 160 ? "text-amber-500 font-semibold" : "text-muted-foreground"
+                  }`}
               >
                 {excerpt.length} / 160 chars (SEO recommended)
               </span>
@@ -703,10 +722,12 @@ export default function PostEditor({ initialData }: PostEditorProps) {
 
             <hr className="border-border/60" />
 
-            <div
-              className="prose dark:prose-invert max-w-none text-foreground leading-relaxed tiptap-rendered-content"
-              dangerouslySetInnerHTML={{ __html: content }}
-            />
+            <ArticleCodeEnhancer>
+              <div
+                className="max-w-none text-foreground leading-relaxed tiptap-rendered-content blog-content-body"
+                dangerouslySetInnerHTML={{ __html: content }}
+              />
+            </ArticleCodeEnhancer>
           </div>
         </DialogContent>
       </Dialog>

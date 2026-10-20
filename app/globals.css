@@ -134,8 +134,7 @@
     radial-gradient(at 50% 75%, rgba(147, 51, 234, 0.07) 0px, transparent 50%);
 }
 
-/* Rich-Text Tiptap Typography & Content Styling */
-.tiptap-rendered-content h1,
+/* Tiptap Editor Placeholder (Editor only) */
 .tiptap p.is-editor-empty:first-child::before {
   color: var(--muted-foreground);
   content: attr(data-placeholder);
@@ -144,118 +143,279 @@
   pointer-events: none;
 }
 
-.tiptap-rendered-content h1 {
-  font-size: 2.25rem;
-  font-weight: 800;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
-  line-height: 1.2;
+/* Rich-Text Tiptap & Markdown Public Blog Typography */
+.tiptap-rendered-content,
+.blog-content-body {
+  width: 100%;
   color: var(--foreground);
+  line-height: 1.8;
+  font-size: 1.0625rem;
+  word-break: break-word;
 }
 
-.tiptap-rendered-content h2 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin-top: 2rem;
-  margin-bottom: 0.75rem;
+.tiptap-rendered-content h1,
+.blog-content-body h1 {
+  display: block;
+  width: 100%;
+  clear: both;
+  font-size: clamp(1.85rem, 4vw, 2.35rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin-top: 2.75rem;
+  margin-bottom: 1rem;
   line-height: 1.25;
   color: var(--foreground);
 }
 
-.tiptap-rendered-content h3 {
+.tiptap-rendered-content h2,
+.blog-content-body h2 {
+  display: block;
+  width: 100%;
+  clear: both;
+  font-size: clamp(1.45rem, 3vw, 1.85rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 2.25rem;
+  margin-bottom: 0.85rem;
+  line-height: 1.3;
+  color: var(--foreground);
+}
+
+.tiptap-rendered-content h3,
+.blog-content-body h3 {
+  display: block;
+  width: 100%;
+  clear: both;
   font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin-top: 1.75rem;
+  margin-bottom: 0.65rem;
+  line-height: 1.4;
+  color: var(--foreground);
+}
+
+.tiptap-rendered-content h4,
+.blog-content-body h4 {
+  display: block;
+  width: 100%;
+  clear: both;
+  font-size: 1.15rem;
   font-weight: 600;
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
+  line-height: 1.4;
   color: var(--foreground);
 }
 
-.tiptap-rendered-content h4 {
-  font-size: 1.15rem;
-  font-weight: 600;
-  margin-top: 1.25rem;
-  margin-bottom: 0.5rem;
+.tiptap-rendered-content p,
+.blog-content-body p {
+  display: block;
+  width: 100%;
+  margin-top: 0;
+  margin-bottom: 1.35rem;
+  line-height: 1.85;
   color: var(--foreground);
 }
 
-.tiptap-rendered-content p {
-  margin-bottom: 1.25rem;
-  line-height: 1.8;
+.tiptap-rendered-content strong,
+.blog-content-body strong,
+.tiptap-rendered-content b,
+.blog-content-body b {
+  font-weight: 700;
   color: var(--foreground);
 }
 
-.tiptap-rendered-content ul {
+.tiptap-rendered-content em,
+.blog-content-body em,
+.tiptap-rendered-content i,
+.blog-content-body i {
+  font-style: italic;
+}
+
+.tiptap-rendered-content u,
+.blog-content-body u {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tiptap-rendered-content a,
+.blog-content-body a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  font-weight: 500;
+  transition: opacity 0.15s ease;
+}
+
+.tiptap-rendered-content a:hover,
+.blog-content-body a:hover {
+  opacity: 0.8;
+}
+
+.tiptap-rendered-content ul,
+.blog-content-body ul {
+  display: block;
   list-style-type: disc;
-  padding-left: 1.5rem;
-  margin-bottom: 1.25rem;
+  padding-left: 1.75rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1.35rem;
   color: var(--foreground);
 }
 
-.tiptap-rendered-content ol {
+.tiptap-rendered-content ol,
+.blog-content-body ol {
+  display: block;
   list-style-type: decimal;
-  padding-left: 1.5rem;
-  margin-bottom: 1.25rem;
+  padding-left: 1.75rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1.35rem;
   color: var(--foreground);
 }
 
-.tiptap-rendered-content li {
+.tiptap-rendered-content li,
+.blog-content-body li {
+  margin-bottom: 0.45rem;
+  line-height: 1.75;
+}
+
+.tiptap-rendered-content li > p,
+.blog-content-body li > p {
   margin-bottom: 0.35rem;
 }
 
-.tiptap-rendered-content blockquote {
-  border-left: 3px solid var(--accent);
-  padding-left: 1.25rem;
+.tiptap-rendered-content blockquote,
+.blog-content-body blockquote,
+.tiptap blockquote {
+  display: block;
+  border-left: 3.5px solid var(--accent);
+  padding: 0.85rem 1.35rem;
+  margin: 1.75rem 0;
+  background: var(--muted);
+  border-radius: 0 0.75rem 0.75rem 0;
   font-style: italic;
   color: var(--muted-foreground);
-  margin: 1.5rem 0;
-  background: var(--muted);
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
-  border-radius: 0 0.5rem 0.5rem 0;
+  line-height: 1.7;
 }
 
-.tiptap-rendered-content pre {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 0.75rem;
-  padding: 1.25rem 1.5rem;
+.tiptap-rendered-content blockquote p,
+.blog-content-body blockquote p,
+.tiptap blockquote p {
+  margin-bottom: 0;
+  color: inherit;
+}
+
+.tiptap-rendered-content blockquote p:not(:last-child),
+.blog-content-body blockquote p:not(:last-child),
+.tiptap blockquote p:not(:last-child) {
+  margin-bottom: 0.75rem;
+}
+
+.tiptap-rendered-content pre,
+.blog-content-body pre {
+  background: #080c14 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.85rem;
   overflow-x: auto;
-  margin: 1.5rem 0;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.08);
+  margin: 1.75rem 0;
+  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.45);
 }
 
-.tiptap-rendered-content pre code {
-  background: transparent;
-  padding: 0;
-  font-family: var(--font-mono);
+.tiptap-rendered-content pre code,
+.blog-content-body pre code {
+  background: transparent !important;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.875rem;
-  color: var(--foreground);
-  line-height: 1.6;
+  color: #e2e8f0;
+  line-height: 1.75;
+  border: none !important;
+  tab-size: 2;
 }
 
-.tiptap-rendered-content code {
+/* Developer Syntax Highlighting Theme */
+.code-keyword {
+  color: #c678dd;
+  font-weight: 600;
+}
+.code-builtin {
+  color: #38bdf8;
+  font-weight: 500;
+}
+.code-function {
+  color: #60a5fa;
+}
+.code-string {
+  color: #4ade80;
+}
+.code-number {
+  color: #fb923c;
+}
+.code-boolean {
+  color: #facc15;
+  font-weight: 600;
+}
+.code-comment {
+  color: #64748b;
+  font-style: italic;
+}
+.code-operator {
+  color: #f472b6;
+}
+.code-punctuation {
+  color: #94a3b8;
+}
+
+.tiptap-rendered-content :not(pre) > code,
+.blog-content-body :not(pre) > code {
   background: var(--muted);
   color: var(--accent);
   padding: 0.2rem 0.45rem;
-  border-radius: 0.35rem;
+  border-radius: 0.375rem;
   font-family: var(--font-mono);
-  font-size: 0.875rem;
+  font-size: 0.875em;
   border: 1px solid var(--border);
 }
 
-.tiptap-rendered-content img {
+.tiptap-rendered-content img,
+.blog-content-body img {
+  display: block;
   border-radius: 0.85rem;
   max-width: 100%;
   height: auto;
   margin: 2rem auto;
   border: 1px solid var(--border);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
 }
 
-.tiptap-rendered-content hr {
+.tiptap-rendered-content hr,
+.blog-content-body hr {
   border: 0;
   border-top: 1px solid var(--border);
-  margin: 2.5rem 0;
+  margin: 2.75rem 0;
+}
+
+.tiptap-rendered-content table,
+.blog-content-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.75rem 0;
+  font-size: 0.95rem;
+}
+
+.tiptap-rendered-content th,
+.blog-content-body th,
+.tiptap-rendered-content td,
+.blog-content-body td {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+.tiptap-rendered-content th,
+.blog-content-body th {
+  background: var(--muted);
+  font-weight: 600;
+  color: var(--foreground);
 }
 
 

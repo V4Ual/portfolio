@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Search,
   Clock,
@@ -10,10 +11,19 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  Check,
   X,
   ArrowUpDown,
+  LayoutGrid,
   Sparkles,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export interface PostItem {
   id: string;
@@ -25,13 +35,13 @@ export interface PostItem {
   coverImage?: string | null;
   publishedAt: Date | string | null;
   category?: {
-    id: string;
+    id: string | number;
     name: string;
     slug: string;
   } | null;
   tags?: Array<{
     tag: {
-      id: string;
+      id: string | number;
       name: string;
       slug: string;
     };
@@ -39,7 +49,7 @@ export interface PostItem {
 }
 
 interface CategoryItem {
-  id: string;
+  id: string | number;
   name: string;
   slug: string;
 }
@@ -51,15 +61,61 @@ interface BlogShowcaseProps {
 
 type SortOption = "latest" | "popular" | "oldest";
 
-const POSTS_PER_PAGE = 6;
-
 export function BlogShowcase({ posts, categories }: BlogShowcaseProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<SortOption>("latest");
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const searchParams = useSearchParams();
 
-  // 1. Filter posts based on category and search query
+  // Read initial values from URL query parameters (or sensible defaults)
+  const initialQuery = searchParams?.get("q") ?? "";
+  const initialCategory = searchParams?.get("category") ?? "all";
+  const initialSort = (searchParams?.get("sort") as SortOption) ?? "latest";
+  const initialPage = parseInt(searchParams?.get("page") ?? "1", 10) || 1;
+  const initialPerPage = parseInt(searchParams?.get("per_page") ?? "6", 10) || 6;
+
+  const [searchQuery, setSearchQuery] = useState<string>(initialQuery);
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
+  const [sortBy, setSortBy] = useState<SortOption>(initialSort);
+  const [currentPage, setCurrentPage] = useState<number>(initialPage);
+  const [postsPerPage, setPostsPerPage] = useState<number>(initialPerPage);
+
+  // Sync state to URL seamlessly without page reload
+  const updateUrl = useCallback(
+    (newParams: {
+      q?: string;
+      category?: string;
+      sort?: string;
+      page?: number;
+      per_page?: number;
+    }) => {
+      if (typeof window === "undefined") return;
+      const url = new URL(window.location.href);
+
+      const q = newParams.q !== undefined ? newParams.q : searchQuery;
+      const category = newParams.category !== undefined ? newParams.category : selectedCategory;
+      const sort = newParams.sort !== undefined ? newParams.sort : sortBy;
+      const page = newParams.page !== undefined ? newParams.page : currentPage;
+      const perPage = newParams.per_page !== undefined ? newParams.per_page : postsPerPage;
+
+      if (q.trim()) url.searchParams.set("q", q.trim());
+      else url.searchParams.delete("q");
+
+      if (category && category !== "all") url.searchParams.set("category", category);
+      else url.searchParams.delete("category");
+
+      if (sort && sort !== "latest") url.searchParams.set("sort", sort);
+      else url.searchParams.delete("sort");
+
+      if (page > 1) url.searchParams.set("page", page.toString());
+      else url.searchParams.delete("page");
+
+      if (perPage !== 6) url.searchParams.set("per_page", perPage.toString());
+      else url.searchParams.delete("per_page");
+
+      window.history.replaceState(null, "", url.toString());
+    },
+    [searchQuery, selectedCategory, sortBy, currentPage, postsPerPage]
+  );
+
+  // 1. Dynamic filtering based on search query and category
   const filteredPosts = useMemo(() => {
     return posts.filter((post) => {
       // Category match
@@ -69,21 +125,21 @@ export function BlogShowcase({ posts, categories }: BlogShowcaseProps) {
 
       // Search query match
       if (searchQuery.trim() !== "") {
-        const query = searchQuery.toLowerCase();
+        const query = searchQuery.toLowerCase().trim();
         const matchesTitle = post.title.toLowerCase().includes(query);
         const matchesExcerpt = post.excerpt.toLowerCase().includes(query);
-        const matchesCategory = post.category?.name.toLowerCase().includes(query);
+        const matchesCategory = post.category?.name?.toLowerCase().includes(query);
         const matchesTags = post.tags?.some((t) =>
           t.tag.name.toLowerCase().includes(query)
         );
-        return matchesTitle || matchesExcerpt || matchesCategory || matchesTags;
+        return Boolean(matchesTitle || matchesExcerpt || matchesCategory || matchesTags);
       }
 
       return true;
     });
   }, [posts, selectedCategory, searchQuery]);
 
-  // 2. Sort filtered posts
+  // 2. Dynamic sorting
   const sortedPosts = useMemo(() => {
     return [...filteredPosts].sort((a, b) => {
       if (sortBy === "popular") {
@@ -101,18 +157,26 @@ export function BlogShowcase({ posts, categories }: BlogShowcaseProps) {
     });
   }, [filteredPosts, sortBy]);
 
-  // 3. Pagination calculations
+  // 3. Dynamic pagination calculations
   const totalItems = sortedPosts.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / POSTS_PER_PAGE));
-  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const totalPages = Math.max(1, Math.ceil(totalItems / postsPerPage));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
 
-  const startIndex = (safeCurrentPage - 1) * POSTS_PER_PAGE;
-  const endIndex = Math.min(startIndex + POSTS_PER_PAGE, totalItems);
+  // Auto-clamp currentPage if search reduces page count
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+      updateUrl({ page: totalPages });
+    }
+  }, [totalPages, currentPage, updateUrl]);
+
+  const startIndex = (safeCurrentPage - 1) * postsPerPage;
+  const endIndex = Math.min(startIndex + postsPerPage, totalItems);
   const currentPosts = useMemo(() => {
     return sortedPosts.slice(startIndex, endIndex);
   }, [sortedPosts, startIndex, endIndex]);
 
-  // Scroll to blog section smoothly on page change
+  // Smooth scroll to blog top on page change
   const scrollToBlogTop = () => {
     const el = document.getElementById("blog");
     if (el) {
@@ -123,27 +187,48 @@ export function BlogShowcase({ posts, categories }: BlogShowcaseProps) {
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages || page === safeCurrentPage) return;
     setCurrentPage(page);
+    updateUrl({ page });
     scrollToBlogTop();
   };
 
   const handleCategorySelect = (categorySlug: string) => {
     setSelectedCategory(categorySlug);
     setCurrentPage(1);
+    updateUrl({ category: categorySlug, page: 1 });
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+    const val = e.target.value;
+    setSearchQuery(val);
     setCurrentPage(1);
+    updateUrl({ q: val, page: 1 });
   };
 
   const handleClearSearch = () => {
     setSearchQuery("");
     setCurrentPage(1);
+    updateUrl({ q: "", page: 1 });
   };
 
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortBy(e.target.value as SortOption);
+  const handleSortSelect = (sortVal: SortOption) => {
+    setSortBy(sortVal);
     setCurrentPage(1);
+    updateUrl({ sort: sortVal, page: 1 });
+  };
+
+  const handlePerPageChange = (val: number) => {
+    setPostsPerPage(val);
+    setCurrentPage(1);
+    updateUrl({ per_page: val, page: 1 });
+  };
+
+  const handleResetFilters = () => {
+    setSelectedCategory("all");
+    setSearchQuery("");
+    setSortBy("latest");
+    setCurrentPage(1);
+    setPostsPerPage(6);
+    updateUrl({ q: "", category: "all", sort: "latest", page: 1, per_page: 6 });
   };
 
   // Generate numbered pagination pills with smart ellipsis
@@ -199,23 +284,89 @@ export function BlogShowcase({ posts, categories }: BlogShowcaseProps) {
             )}
           </div>
 
-          {/* Sort Dropdown */}
-          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-            <span className="text-xs text-muted-foreground hidden xs:inline font-medium">
-              Sort by:
-            </span>
-            <div className="relative">
-              <select
-                value={sortBy}
-                onChange={handleSortChange}
-                aria-label="Sort articles"
-                className="appearance-none pl-8 pr-8 py-2 rounded-xl border border-border/80 bg-card/80 text-foreground text-xs font-semibold focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent cursor-pointer transition-all shadow-xs"
-              >
-                <option value="latest">Newest First</option>
-                <option value="popular">Most Popular</option>
-                <option value="oldest">Oldest First</option>
-              </select>
-              <ArrowUpDown className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-accent pointer-events-none" />
+          {/* Sort & Per-Page Controls */}
+          <div className="flex items-center gap-3 self-end sm:self-auto shrink-0">
+            {/* Posts Per Page Selector */}
+            <div className="hidden xs:flex items-center gap-1.5 bg-card/70 border border-border/80 px-2 py-1 rounded-xl text-xs">
+              <span className="text-[11px] text-muted-foreground font-medium">Show:</span>
+              {[3, 6, 9].map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => handlePerPageChange(num)}
+                  className={`px-2 py-0.5 rounded-md font-bold transition-all text-xs ${
+                    postsPerPage === num
+                      ? "bg-accent text-accent-foreground shadow-xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }`}
+                  title={`Show ${num} articles per page`}
+                >
+                  {num}
+                </button>
+              ))}
+            </div>
+
+            {/* Custom Premium Sort Dropdown */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground hidden md:inline font-medium">
+                Sort by:
+              </span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2 pl-3 pr-2.5 py-1.5 rounded-xl border border-border/80 bg-card/80 hover:bg-card hover:border-accent/60 text-foreground text-xs font-semibold transition-all shadow-xs cursor-pointer focus:outline-none"
+                  >
+                    <ArrowUpDown className="w-3.5 h-3.5 text-accent" />
+                    <span>
+                      {sortBy === "latest"
+                        ? "Newest First"
+                        : sortBy === "popular"
+                        ? "Most Popular"
+                        : "Oldest First"}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-40 rounded-xl border border-border/80 bg-card/95 backdrop-blur-xl p-1 shadow-xl z-50 space-y-0.5"
+                >
+                  <DropdownMenuItem
+                    onClick={() => handleSortSelect("latest")}
+                    className={`cursor-pointer rounded-lg text-xs font-semibold flex items-center justify-between px-2.5 py-2 transition-colors ${
+                      sortBy === "latest"
+                        ? "bg-accent/15 text-accent font-bold"
+                        : "text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <span>Newest First</span>
+                    {sortBy === "latest" && <Check className="w-3.5 h-3.5 text-accent" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleSortSelect("popular")}
+                    className={`cursor-pointer rounded-lg text-xs font-semibold flex items-center justify-between px-2.5 py-2 transition-colors ${
+                      sortBy === "popular"
+                        ? "bg-accent/15 text-accent font-bold"
+                        : "text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <span>Most Popular</span>
+                    {sortBy === "popular" && <Check className="w-3.5 h-3.5 text-accent" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleSortSelect("oldest")}
+                    className={`cursor-pointer rounded-lg text-xs font-semibold flex items-center justify-between px-2.5 py-2 transition-colors ${
+                      sortBy === "oldest"
+                        ? "bg-accent/15 text-accent font-bold"
+                        : "text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <span>Oldest First</span>
+                    {sortBy === "oldest" && <Check className="w-3.5 h-3.5 text-accent" />}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -266,24 +417,40 @@ export function BlogShowcase({ posts, categories }: BlogShowcaseProps) {
           of <strong className="text-foreground">{totalItems}</strong> article
           {totalItems === 1 ? "" : "s"}
           {selectedCategory !== "all" &&
-            ` in "${categories.find((c) => c.slug === selectedCategory)?.name}"`}
+            ` in "${categories.find((c) => c.slug === selectedCategory)?.name || selectedCategory}"`}
           {searchQuery && ` matching "${searchQuery}"`}
         </span>
 
-        {(searchQuery || selectedCategory !== "all" || sortBy !== "latest") && (
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedCategory("all");
-              setSearchQuery("");
-              setSortBy("latest");
-              setCurrentPage(1);
-            }}
-            className="text-accent hover:underline font-medium text-xs"
-          >
-            Reset Filters
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {/* Mobile per-page selector */}
+          <div className="xs:hidden flex items-center gap-1">
+            <span className="text-[11px]">Per page:</span>
+            {[3, 6].map((num) => (
+              <button
+                key={num}
+                type="button"
+                onClick={() => handlePerPageChange(num)}
+                className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                  postsPerPage === num
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {num}
+              </button>
+            ))}
+          </div>
+
+          {(searchQuery || selectedCategory !== "all" || sortBy !== "latest" || postsPerPage !== 6) && (
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="text-accent hover:underline font-medium text-xs cursor-pointer"
+            >
+              Reset Filters
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Articles Grid */}
@@ -376,27 +543,29 @@ export function BlogShowcase({ posts, categories }: BlogShowcaseProps) {
           </p>
           <button
             type="button"
-            onClick={() => {
-              setSearchQuery("");
-              setSelectedCategory("all");
-              setSortBy("latest");
-              setCurrentPage(1);
-            }}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent/90 transition-all shadow-xs"
+            onClick={handleResetFilters}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent/90 transition-all shadow-xs cursor-pointer"
           >
             Clear Filters
           </button>
         </div>
       )}
 
-      {/* Numbered Pagination Bar */}
-      {totalPages > 1 && (
+      {/* Dynamic Numbered Pagination Bar */}
+      {totalItems > 0 && (
         <div className="pt-8 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Current Page Summary */}
-          <span className="text-xs text-muted-foreground font-mono order-2 sm:order-1">
-            Page <strong className="text-foreground">{safeCurrentPage}</strong> of{" "}
-            <strong className="text-foreground">{totalPages}</strong>
-          </span>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono order-2 sm:order-1">
+            <span>
+              Page <strong className="text-foreground">{safeCurrentPage}</strong> of{" "}
+              <strong className="text-foreground">{totalPages}</strong>
+            </span>
+            {totalPages === 1 && (
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-accent/10 text-accent font-sans">
+                All articles shown
+              </span>
+            )}
+          </div>
 
           {/* Pagination Controls */}
           <nav
@@ -408,7 +577,7 @@ export function BlogShowcase({ posts, categories }: BlogShowcaseProps) {
               type="button"
               onClick={() => handlePageChange(safeCurrentPage - 1)}
               disabled={safeCurrentPage === 1}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border/80 bg-card/80 text-foreground text-xs font-semibold hover:border-accent hover:text-accent disabled:opacity-40 disabled:pointer-events-none transition-all shadow-xs active:scale-95"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border/80 bg-card/80 text-foreground text-xs font-semibold hover:border-accent hover:text-accent disabled:opacity-40 disabled:pointer-events-none transition-all shadow-xs active:scale-95 cursor-pointer"
               aria-label="Go to previous page"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -437,7 +606,7 @@ export function BlogShowcase({ posts, categories }: BlogShowcaseProps) {
                     key={`page-${pageNum}`}
                     type="button"
                     onClick={() => handlePageChange(pageNum)}
-                    className={`w-8 h-8 rounded-lg text-xs font-bold transition-all duration-200 border ${
+                    className={`w-8 h-8 rounded-lg text-xs font-bold transition-all duration-200 border cursor-pointer ${
                       isActive
                         ? "bg-accent text-accent-foreground border-accent shadow-xs shadow-accent/25 scale-105"
                         : "bg-card/70 border-border/80 text-muted-foreground hover:text-foreground hover:border-border hover:bg-card"
@@ -456,7 +625,7 @@ export function BlogShowcase({ posts, categories }: BlogShowcaseProps) {
               type="button"
               onClick={() => handlePageChange(safeCurrentPage + 1)}
               disabled={safeCurrentPage === totalPages}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border/80 bg-card/80 text-foreground text-xs font-semibold hover:border-accent hover:text-accent disabled:opacity-40 disabled:pointer-events-none transition-all shadow-xs active:scale-95"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border/80 bg-card/80 text-foreground text-xs font-semibold hover:border-accent hover:text-accent disabled:opacity-40 disabled:pointer-events-none transition-all shadow-xs active:scale-95 cursor-pointer"
               aria-label="Go to next page"
             >
               <span className="hidden xs:inline">Next</span>

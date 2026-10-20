@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { BlogShowcase } from "@/components/BlogShowcase";
@@ -80,7 +81,20 @@ export default async function BlogIndexPage() {
 
         {/* Full Interactive Showcase: Search, Sort Dropdown, Categories, Cards & Numbered Pagination */}
         <section id="blog" className="pt-2">
-          <BlogShowcase posts={posts} categories={categories} />
+          <Suspense
+            fallback={
+              <div className="space-y-8 animate-pulse">
+                <div className="h-10 bg-muted/60 rounded-xl w-full max-w-md" />
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="h-72 bg-card/60 rounded-2xl border border-border/60" />
+                  ))}
+                </div>
+              </div>
+            }
+          >
+            <BlogShowcase posts={posts} categories={categories} />
+          </Suspense>
         </section>
       </main>
 

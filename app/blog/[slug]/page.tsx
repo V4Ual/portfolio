@@ -243,16 +243,18 @@ export default async function BlogDetailsPage({
 
         {/* Article Body wrapped with Code Enhancer */}
         <ArticleCodeEnhancer>
-          <article className="prose prose-neutral dark:prose-invert max-w-none text-foreground/90 leading-relaxed text-base sm:text-lg break-words space-y-6">
+          <article className="blog-content-body max-w-none text-foreground/90 break-words">
             {isHtmlContent ? (
               <div
                 dangerouslySetInnerHTML={{ __html: post.content }}
-                className="tiptap-rendered-content space-y-5"
+                className="tiptap-rendered-content"
               />
             ) : (
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {post.content}
-              </ReactMarkdown>
+              <div className="blog-content-body">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {post.content}
+                </ReactMarkdown>
+              </div>
             )}
           </article>
         </ArticleCodeEnhancer>
