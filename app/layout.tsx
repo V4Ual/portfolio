@@ -2,6 +2,8 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -134,7 +136,7 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="en" className={`${_geist.className}`}>
+    <html lang="en" suppressHydrationWarning className={`${_geist.className}`}>
       <head>
         <link rel="icon" href="/logo.png" type="image/png" />
         <link rel="shortcut icon" href="/logo.png" type="image/png" />
@@ -145,9 +147,18 @@ export default function RootLayout({
         />
       </head>
       <body className="font-sans antialiased">
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster richColors position="top-right" />
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>
   )
 }
+

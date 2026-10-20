@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("ADMIN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  posts     Post[]
+
+  @@map("users")
+}
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  posts       Post[]
+
+  @@map("categories")
+}
+
+model Tag {
+  id    Int       @id @default(autoincrement())
+  name  String    @unique
+  slug  String    @unique
+  posts PostTag[]
+
+  @@map("tags")
+}
+
+model Post {
+  id              String      @id @default(uuid())
+  title           String
+  slug            String      @unique
+  excerpt         String
+  content         String      @db.Text
+  coverImage      String?
+  status          String      @default("DRAFT") // DRAFT, PUBLISHED, UNPUBLISHED
+  published       Boolean     @default(false)
+  featured        Boolean     @default(false)
+  views           Int         @default(0)
+  readTime        String      @default("5 min read")
+  metaTitle       String?
+  metaDescription String?
+  canonicalUrl    String?
+  ogImage         String?
+  publishedAt     DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  authorId   String?
+  author     User?       @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  categoryId Int?
+  category   Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags       PostTag[]
+  images     BlogImage[]
+
+  @@index([slug])
+  @@index([published, publishedAt])
+  @@index([status])
+  @@index([categoryId])
+  @@map("posts")
+}
+
+model BlogImage {
+  id        String   @id @default(uuid())
+  filename  String
+  mimeType  String
+  data      Bytes
+  size      Int
+  altText   String?
+  caption   String?
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("blog_images")
+}
+
+model PostTag {
+  postId String
+  tagId  Int
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@map("post_tags")
+}
