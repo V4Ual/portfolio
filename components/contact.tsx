@@ -70,7 +70,7 @@ export function Contact() {
             viewport={{ once: true }}
           >
             <span className="text-accent text-sm font-semibold tracking-widest uppercase">
-              // Let's Build Something Great
+              // Available for Hire & Collaboration
             </span>
           </motion.div>
 
@@ -81,9 +81,9 @@ export function Contact() {
             transition={{ delay: 0.1 }}
             className="text-4xl sm:text-5xl font-extrabold tracking-tight"
           >
-            Get In{" "}
+            Hire{" "}
             <DecryptedText
-              text="Touch"
+              text="Vishal Sharma"
               speed={40}
               maxIterations={10}
               animateOn="view"
@@ -98,7 +98,7 @@ export function Contact() {
             transition={{ delay: 0.2 }}
             className="text-muted-foreground text-lg"
           >
-            Whether you have a project in mind, an opportunity to discuss, or just want to connect — feel free to drop a message!
+            Looking for an experienced PERN Full-Stack Developer or backend engineer for your next project? Based in India, open to remote and high-impact roles worldwide.
           </motion.p>
         </div>
 

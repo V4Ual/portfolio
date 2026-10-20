@@ -165,7 +165,7 @@ export function Hero() {
                 {!imgError ? (
                   <Image
                     src="/photo.png"
-                    alt="Vishal Sharma"
+                    alt="Vishal Sharma - PERN Full-Stack Developer & Software Engineer"
                     fill
                     priority
                     sizes="(max-width: 768px) 100vw, 400px"

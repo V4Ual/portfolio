@@ -35,11 +35,12 @@ export function Navigation() {
   }, []);
 
   const navItems = [
-    { label: "About", href: "#about", id: "about" },
-    { label: "Skills", href: "#skills", id: "skills" },
-    { label: "Projects", href: "#projects", id: "projects" },
-    { label: "Experience", href: "#experience", id: "experience" },
-    { label: "Contact", href: "#contact", id: "contact" },
+    { label: "About", href: "/#about", id: "about" },
+    { label: "Skills", href: "/#skills", id: "skills" },
+    { label: "Projects", href: "/#projects", id: "projects" },
+    { label: "Experience", href: "/#experience", id: "experience" },
+    // { label: "Blog", href: "/blog", id: "blog" },
+    { label: "Contact", href: "/#contact", id: "contact" },
   ];
 
   return (
@@ -51,7 +52,7 @@ export function Navigation() {
           }`}
       >
         {/* LOGO */}
-        <Link href="#" className="flex items-center gap-2.5 group">
+        <Link href="/" className="flex items-center gap-2.5 group">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-accent to-primary flex items-center justify-center text-accent-foreground font-bold text-sm shadow-md group-hover:scale-105 transition-transform">
             <Code2 className="w-4 h-4 text-background" />
           </div>

@@ -39,7 +39,7 @@ export function About() {
             viewport={{ once: true }}
           >
             <span className="text-accent text-xs font-bold tracking-widest uppercase">
-              // Professional Background
+              // Professional Background & Expertise
             </span>
           </motion.div>
 
@@ -50,7 +50,7 @@ export function About() {
             transition={{ delay: 0.1 }}
             className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground"
           >
-            About Me
+            About Vishal Sharma
           </motion.h2>
 
           <motion.p
@@ -60,7 +60,7 @@ export function About() {
             transition={{ delay: 0.2 }}
             className="text-muted-foreground text-base leading-relaxed"
           >
-            Full-stack engineer dedicated to writing clean code, architecting scalable backend APIs, and building intuitive user interfaces.
+            Full-Stack Software Engineer specialized in architecting high-performance <span className="text-foreground font-semibold">PERN stack</span> (PostgreSQL, Express.js, React, Node.js) web applications, scalable backend microservices, and modern Next.js interfaces.
           </motion.p>
         </div>
 
@@ -81,16 +81,16 @@ export function About() {
                     <Zap className="w-5 h-5" />
                   </div>
                   <h3 className="text-xl font-bold text-foreground">
-                    Engineering Excellence
+                    Full-Stack Engineering & Scalable Systems
                   </h3>
                 </div>
 
                 <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
-                  With <span className="text-foreground font-semibold">3+ years of professional web development experience</span>, I have engineered scalable POS systems, SaaS store builders, and modern e-commerce storefronts.
+                  With <span className="text-foreground font-semibold">3+ years of professional engineering experience</span>, I specialize in end-to-end web system architecture—ranging from high-concurrency franchise POS platforms to multi-tenant SaaS store builders and luxury booking portals.
                 </p>
 
                 <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
-                  I focus on modular code organization, REST API optimization, secure authentication, and delivering smooth user experiences.
+                  My technical focus combines <span className="text-foreground font-semibold">PostgreSQL query optimization</span>, REST & WebSocket API design, secure JWT authentication, and high-performance server-side rendering with <span className="text-foreground font-semibold">Next.js and TypeScript</span>.
                 </p>
               </div>
 
@@ -98,10 +98,10 @@ export function About() {
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
                   <span className="text-xs font-semibold text-foreground">
-                    Production Ready Standards
+                    Production Grade Architecture
                   </span>
                 </div>
-                <span className="text-xs font-mono text-accent">3+ Years Exp</span>
+                <span className="text-xs font-mono text-accent">3+ Years Experience</span>
               </div>
             </div>
           </motion.div>

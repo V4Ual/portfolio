@@ -128,7 +128,7 @@ export function Skills() {
             transition={{ delay: 0.1 }}
             className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground"
           >
-            Skills & Technologies
+            Technical Stack & Engineering Skills
           </motion.h2>
 
           <motion.p
@@ -138,7 +138,7 @@ export function Skills() {
             transition={{ delay: 0.2 }}
             className="text-muted-foreground text-base"
           >
-            Technologies and frameworks I utilize to construct production-ready applications.
+            Full-stack engineering expertise across the PERN stack (PostgreSQL, Express, React, Node.js), Next.js App Router, cloud infrastructure, and relational database systems.
           </motion.p>
         </div>
 

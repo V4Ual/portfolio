@@ -83,6 +83,13 @@ export function Footer() {
 
           <div className="flex items-center gap-4">
             <a
+              href="/blog"
+              className="hover:text-accent transition-colors"
+            >
+              Blog
+            </a>
+            <span>•</span>
+            <a
               href="https://github.com/V4Ual"
               target="_blank"
               rel="noopener noreferrer"

@@ -141,8 +141,33 @@ export function Projects() {
     },
   ];
 
+  const projectsJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Vishal Sharma - Full-Stack & PERN Projects",
+    "itemListElement": projects.map((p, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": "SoftwareApplication",
+        "name": p.title,
+        "applicationCategory": p.category,
+        "description": p.description,
+        "url": p.live,
+        "author": {
+          "@type": "Person",
+          "name": "Vishal Sharma"
+        }
+      }
+    }))
+  };
+
   return (
     <section id="projects" className="py-24 px-6 relative overflow-hidden">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(projectsJsonLd) }}
+      />
       <div className="max-w-6xl mx-auto space-y-16">
         {/* HEADING */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
@@ -152,7 +177,7 @@ export function Projects() {
             viewport={{ once: true }}
           >
             <span className="text-accent text-sm font-semibold tracking-widest uppercase">
-              // Featured Case Studies
+              // Featured Case Studies & Production Work
             </span>
           </motion.div>
 
@@ -163,9 +188,9 @@ export function Projects() {
             transition={{ delay: 0.1 }}
             className="text-4xl sm:text-5xl font-extrabold tracking-tight"
           >
-            Past{" "}
+            Featured{" "}
             <DecryptedText
-              text="Projects & Work"
+              text="Projects & Architecture"
               speed={40}
               maxIterations={10}
               animateOn="view"
@@ -180,7 +205,7 @@ export function Projects() {
             transition={{ delay: 0.2 }}
             className="text-muted-foreground text-lg"
           >
-            Production web platforms I've architected and delivered for enterprise clients.
+            Production web platforms and enterprise applications engineered with the PERN stack, Next.js, and high-performance databases.
           </motion.p>
         </div>
 
@@ -199,7 +224,7 @@ export function Projects() {
                 <div className="relative w-full h-52 overflow-hidden bg-card">
                   <Image
                     src={failedImages[project.id] ? "/placeholder.jpg" : project.image}
-                    alt={project.title}
+                    alt={`${project.title} - Full-Stack Web Application by Vishal Sharma`}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     onError={() => handleImageError(project.id)}
