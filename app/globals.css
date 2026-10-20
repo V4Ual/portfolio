@@ -4,6 +4,31 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* Crisp, warm Light Mode palette */
+  --background: oklch(0.985 0.004 240);
+  --foreground: oklch(0.18 0.02 240);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.02 240);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.02 240);
+  --primary: oklch(0.48 0.22 240);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.94 0.01 240);
+  --secondary-foreground: oklch(0.22 0.02 240);
+  --muted: oklch(0.94 0.01 240);
+  --muted-foreground: oklch(0.46 0.02 240);
+  --accent: oklch(0.55 0.18 200);
+  --accent-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.58 0.25 27);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.88 0.015 240);
+  --input: oklch(0.92 0.01 240);
+  --ring: oklch(0.55 0.18 200);
+  --radius: 0.85rem;
+}
+
+.dark {
+  /* Deep, sleek Dark Mode palette */
   --background: oklch(0.09 0.015 240);
   --foreground: oklch(0.98 0.005 240);
   --card: oklch(0.12 0.02 240);
@@ -23,7 +48,6 @@
   --border: oklch(0.2 0.03 240);
   --input: oklch(0.16 0.02 240);
   --ring: oklch(0.72 0.17 195);
-  --radius: 0.85rem;
 }
 
 @theme inline {
@@ -71,14 +95,14 @@
     width: 7px;
   }
   ::-webkit-scrollbar-track {
-    background: oklch(0.09 0.015 240);
+    background: var(--background);
   }
   ::-webkit-scrollbar-thumb {
-    background: oklch(0.24 0.04 240);
+    background: var(--border);
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: oklch(0.6 0.18 195);
+    background: var(--accent);
   }
 }
 
@@ -102,3 +126,136 @@
     radial-gradient(at 85% 25%, rgba(59, 130, 246, 0.06) 0px, transparent 50%),
     radial-gradient(at 50% 75%, rgba(147, 51, 234, 0.05) 0px, transparent 50%);
 }
+
+.dark .bg-ambient-mesh {
+  background-image: 
+    radial-gradient(at 15% 15%, rgba(6, 182, 212, 0.12) 0px, transparent 50%),
+    radial-gradient(at 85% 25%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+    radial-gradient(at 50% 75%, rgba(147, 51, 234, 0.07) 0px, transparent 50%);
+}
+
+/* Rich-Text Tiptap Typography & Content Styling */
+.tiptap-rendered-content h1,
+.tiptap p.is-editor-empty:first-child::before {
+  color: var(--muted-foreground);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.tiptap-rendered-content h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+  color: var(--foreground);
+}
+
+.tiptap-rendered-content h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.25;
+  color: var(--foreground);
+}
+
+.tiptap-rendered-content h3 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--foreground);
+}
+
+.tiptap-rendered-content h4 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: var(--foreground);
+}
+
+.tiptap-rendered-content p {
+  margin-bottom: 1.25rem;
+  line-height: 1.8;
+  color: var(--foreground);
+}
+
+.tiptap-rendered-content ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1.25rem;
+  color: var(--foreground);
+}
+
+.tiptap-rendered-content ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 1.25rem;
+  color: var(--foreground);
+}
+
+.tiptap-rendered-content li {
+  margin-bottom: 0.35rem;
+}
+
+.tiptap-rendered-content blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 1.25rem;
+  font-style: italic;
+  color: var(--muted-foreground);
+  margin: 1.5rem 0;
+  background: var(--muted);
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.tiptap-rendered-content pre {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.08);
+}
+
+.tiptap-rendered-content pre code {
+  background: transparent;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--foreground);
+  line-height: 1.6;
+}
+
+.tiptap-rendered-content code {
+  background: var(--muted);
+  color: var(--accent);
+  padding: 0.2rem 0.45rem;
+  border-radius: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  border: 1px solid var(--border);
+}
+
+.tiptap-rendered-content img {
+  border-radius: 0.85rem;
+  max-width: 100%;
+  height: auto;
+  margin: 2rem auto;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.tiptap-rendered-content hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2.5rem 0;
+}
+
+

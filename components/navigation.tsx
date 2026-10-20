@@ -2,10 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { Menu, X, ArrowUpRight, Code2 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Navigation() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("hero");
@@ -34,12 +37,14 @@ export function Navigation() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const isBlogPage = pathname.startsWith("/blog");
+
   const navItems = [
     { label: "About", href: "/#about", id: "about" },
     { label: "Skills", href: "/#skills", id: "skills" },
     { label: "Projects", href: "/#projects", id: "projects" },
     { label: "Experience", href: "/#experience", id: "experience" },
-    // { label: "Blog", href: "/blog", id: "blog" },
+    { label: "Blog", href: "/blog", id: "blog" },
     { label: "Contact", href: "/#contact", id: "contact" },
   ];
 
@@ -64,7 +69,9 @@ export function Navigation() {
         {/* DESKTOP NAV ITEMS */}
         <div className="hidden md:flex items-center gap-1 bg-card/60 px-3 py-1.5 rounded-full border border-border/50">
           {navItems.map((item) => {
-            const isActive = activeSection === item.id;
+            const isActive =
+              (item.id === "blog" && isBlogPage) ||
+              (!isBlogPage && activeSection === item.id);
             return (
               <a
                 key={item.label}
@@ -89,6 +96,7 @@ export function Navigation() {
 
         {/* ACTIONS */}
         <div className="hidden md:flex items-center gap-3">
+          <ThemeToggle />
           <a
             href="/Vishal_Sharma_MERN.pdf?v=2"
             target="_blank"
@@ -100,14 +108,17 @@ export function Navigation() {
           </a>
         </div>
 
-        {/* MOBILE HAMBURGER */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden p-2 rounded-full bg-card border border-border text-foreground hover:text-accent transition-colors"
-          aria-label="Toggle Menu"
-        >
-          {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        {/* MOBILE HAMBURGER & THEME TOGGLE */}
+        <div className="flex md:hidden items-center gap-2">
+          <ThemeToggle />
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="p-2 rounded-full bg-card border border-border text-foreground hover:text-accent transition-colors"
+            aria-label="Toggle Menu"
+          >
+            {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </nav>
 
       {/* MOBILE DRAWER */}
