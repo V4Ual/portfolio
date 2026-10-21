@@ -21,8 +21,20 @@ import { ArticleCodeEnhancer } from "@/components/ArticleCodeEnhancer";
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import type { Metadata } from "next";
+import { cache } from "react";
 
 export const revalidate = 60;
+
+const getPost = cache(async (slug: string) => {
+  return prisma.post.findUnique({
+    where: { slug },
+    include: {
+      category: true,
+      tags: { include: { tag: true } },
+      author: true,
+    },
+  });
+});
 
 export async function generateMetadata({
   params,
@@ -30,9 +42,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = await prisma.post.findUnique({
-    where: { slug },
-  });
+  const post = await getPost(slug);
 
   if (!post || !post.published) {
     return {
@@ -76,14 +86,7 @@ export default async function BlogDetailsPage({
   const { slug } = await params;
 
   // Only published posts are publicly accessible
-  const post = await prisma.post.findUnique({
-    where: { slug },
-    include: {
-      category: true,
-      tags: { include: { tag: true } },
-      author: true,
-    },
-  });
+  const post = await getPost(slug);
 
   if (!post || !post.published) {
     notFound();

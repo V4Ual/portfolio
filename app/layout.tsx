@@ -1,9 +1,11 @@
 import type React from "react"
+import { Suspense } from "react"
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
+import { PageProgressBar } from "@/components/PageProgressBar"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -153,6 +155,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <Suspense fallback={null}>
+            <PageProgressBar />
+          </Suspense>
           {children}
           <Toaster richColors position="top-right" />
         </ThemeProvider>

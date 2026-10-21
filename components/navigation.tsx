@@ -73,7 +73,7 @@ export function Navigation() {
               (item.id === "blog" && isBlogPage) ||
               (!isBlogPage && activeSection === item.id);
             return (
-              <a
+              <Link
                 key={item.label}
                 href={item.href}
                 className={`relative px-4 py-1 rounded-full text-sm font-medium transition-all duration-200 ${isActive
@@ -89,7 +89,7 @@ export function Navigation() {
                   />
                 )}
                 <span className="relative z-10">{item.label}</span>
-              </a>
+              </Link>
             );
           })}
         </div>
@@ -133,7 +133,7 @@ export function Navigation() {
           >
             <div className="flex flex-col gap-2">
               {navItems.map((item) => (
-                <a
+                <Link
                   key={item.label}
                   href={item.href}
                   onClick={() => setIsOpen(false)}
@@ -141,7 +141,7 @@ export function Navigation() {
                 >
                   <span>{item.label}</span>
                   <span className="text-accent text-xs font-mono">↗</span>
-                </a>
+                </Link>
               ))}
               <a
                 href="/Vishal_Sharma_MERN.pdf?v=2"

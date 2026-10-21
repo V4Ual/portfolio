@@ -106,18 +106,7 @@ function LoginForm() {
           </Button>
         </form>
 
-        <div className="mt-6 pt-5 border-t border-border/60 text-center">
-          <p className="text-[11px] text-muted-foreground">
-            Default development credentials:{" "}
-            <code className="text-accent font-semibold px-1 py-0.5 rounded bg-accent/10">
-              admin@vishalsharma.dev
-            </code>{" "}
-            /{" "}
-            <code className="text-accent font-semibold px-1 py-0.5 rounded bg-accent/10">
-              admin123
-            </code>
-          </p>
-        </div>
+
       </div>
     </div>
   );
