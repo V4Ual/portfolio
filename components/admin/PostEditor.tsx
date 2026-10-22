@@ -67,7 +67,8 @@ interface PostEditorProps {
 
 export default function PostEditor({ initialData }: PostEditorProps) {
   const router = useRouter();
-  const isEditing = !!initialData?.id;
+  const [currentPostId, setCurrentPostId] = useState(initialData?.id);
+  const isEditing = !!currentPostId;
 
   const [title, setTitle] = useState(initialData?.title || "");
   const [slug, setSlug] = useState(initialData?.slug || "");
@@ -77,6 +78,8 @@ export default function PostEditor({ initialData }: PostEditorProps) {
     initialData?.content ||
     `<h2>Introduction</h2><p>Write your technical article here using the rich text editor. You can format headings, lists, blockquotes, code blocks, and upload images directly to PostgreSQL.</p>`
   );
+  const editorRef = useRef<any>(null);
+  const contentRef = useRef<string>(content);
   const [coverImage, setCoverImage] = useState(initialData?.coverImage || "");
   const [categoryName, setCategoryName] = useState(initialData?.categoryName || "");
   const [tags, setTags] = useState(initialData?.tags || "");
@@ -152,11 +155,13 @@ export default function PostEditor({ initialData }: PostEditorProps) {
       return;
     }
 
+    // Always extract 100% fresh, real-time live HTML from the TipTap engine
+    const liveContent = editorRef.current ? editorRef.current.getHTML() : (contentRef.current || content);
     const finalSlug = slug.trim() ? slugify(slug) : slugify(title);
-    const plainText = content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    const plainText = liveContent.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
     const finalExcerpt = excerpt.trim() || plainText.slice(0, 150) || title.trim();
 
-    if (!content.trim() || content === "<p></p>") {
+    if (!liveContent.trim() || liveContent === "<p></p>") {
       toast.error("Article content cannot be empty. Please write something.");
       return;
     }
@@ -170,7 +175,7 @@ export default function PostEditor({ initialData }: PostEditorProps) {
         title: title.trim(),
         slug: finalSlug,
         excerpt: finalExcerpt,
-        content,
+        content: liveContent,
         coverImage: coverImage.trim() || null,
         categoryName: categoryName.trim() || null,
         tags,
@@ -183,10 +188,12 @@ export default function PostEditor({ initialData }: PostEditorProps) {
         ogImage: ogImage.trim() || coverImage.trim() || null,
       };
 
-      if (isEditing && initialData?.id) {
-        await updatePostAction(initialData.id, payload);
+      if (currentPostId) {
+        await updatePostAction(currentPostId, payload);
         setStatus(nextStatus);
         setSlug(finalSlug);
+        setContent(liveContent);
+        contentRef.current = liveContent;
         if (!excerpt.trim()) setExcerpt(finalExcerpt);
         toast.success(
           isPublished
@@ -195,13 +202,18 @@ export default function PostEditor({ initialData }: PostEditorProps) {
         );
       } else {
         const res = await createPostAction(payload);
+        setCurrentPostId(res.id);
+        setStatus(nextStatus);
+        setSlug(res.slug || finalSlug);
+        setContent(liveContent);
+        contentRef.current = liveContent;
+        if (!excerpt.trim()) setExcerpt(finalExcerpt);
         toast.success(
           isPublished
             ? "Article published live! View it at /blog/" + res.slug
             : "Article draft saved in PostgreSQL!"
         );
-        router.push("/admin/posts");
-        return;
+        window.history.replaceState(null, "", `/admin/posts/${res.id}/edit`);
       }
 
       router.refresh();
@@ -214,12 +226,12 @@ export default function PostEditor({ initialData }: PostEditorProps) {
   };
 
   const handleDelete = async () => {
-    if (!initialData?.id) return;
+    if (!currentPostId) return;
     if (!window.confirm(`Permanently delete "${title}" and all its content?`)) return;
 
     setIsSubmitting(true);
     try {
-      await deletePostAction(initialData.id);
+      await deletePostAction(currentPostId);
       toast.success("Article deleted.");
       router.push("/admin/posts");
     } catch (err: any) {
@@ -488,8 +500,14 @@ export default function PostEditor({ initialData }: PostEditorProps) {
             <div className="rounded-2xl border border-border/80 bg-card/60 backdrop-blur-sm overflow-hidden shadow-sm">
               <TiptapEditor
                 content={content}
-                onChange={setContent}
-                postId={initialData?.id}
+                onChange={(newHtml) => {
+                  setContent(newHtml);
+                  contentRef.current = newHtml;
+                }}
+                postId={currentPostId}
+                onEditorReady={(inst) => {
+                  editorRef.current = inst;
+                }}
               />
             </div>
           </div>

@@ -70,6 +70,7 @@ interface TiptapEditorProps {
   content: string;
   onChange: (html: string) => void;
   postId?: string;
+  onEditorReady?: (editor: any) => void;
 }
 
 const HIGHLIGHT_COLORS = [
@@ -228,7 +229,7 @@ function TiptapCodeBlockView({
   );
 }
 
-export default function TiptapEditor({ content, onChange, postId }: TiptapEditorProps) {
+export default function TiptapEditor({ content, onChange, postId, onEditorReady }: TiptapEditorProps) {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
@@ -305,6 +306,13 @@ export default function TiptapEditor({ content, onChange, postId }: TiptapEditor
     },
     immediatelyRender: false,
   });
+
+  // Notify parent of live editor instance so PostEditor can always extract real-time HTML on save
+  useEffect(() => {
+    if (editor && onEditorReady) {
+      onEditorReady(editor);
+    }
+  }, [editor, onEditorReady]);
 
   // Sync content ONLY if postId actually changes (e.g. navigated to a different post)
   // NEVER overwrite content during active user drafting, which would destroy selections
