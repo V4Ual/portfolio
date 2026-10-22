@@ -143,6 +143,57 @@
   pointer-events: none;
 }
 
+/* High-visibility editor & blog text selection */
+.tiptap ::selection,
+.tiptap *::selection,
+.tiptap-rendered-content ::selection,
+.tiptap-rendered-content *::selection,
+.blog-content-body ::selection,
+.blog-content-body *::selection {
+  background-color: rgba(6, 182, 212, 0.35) !important;
+  color: inherit !important;
+}
+
+.dark .tiptap ::selection,
+.dark .tiptap *::selection,
+.dark .tiptap-rendered-content ::selection,
+.dark .tiptap-rendered-content *::selection,
+.dark .blog-content-body ::selection,
+.dark .blog-content-body *::selection {
+  background-color: rgba(6, 182, 212, 0.45) !important;
+  color: #ffffff !important;
+}
+
+/* Rich text Highlight Mark Styling */
+mark,
+.tiptap mark,
+.tiptap-rendered-content mark,
+.blog-content-body mark {
+  background-color: #fef08a;
+  color: #1c1917;
+  padding: 0.12em 0.35em;
+  border-radius: 0.25rem;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  font-weight: 500;
+}
+
+.dark mark,
+.dark .tiptap mark,
+.dark .tiptap-rendered-content mark,
+.dark .blog-content-body mark {
+  background-color: rgba(250, 204, 21, 0.3);
+  color: #fef08a;
+  border: 1px solid rgba(250, 204, 21, 0.2);
+}
+
+.dark mark[data-color],
+.dark .tiptap mark[data-color],
+.dark .tiptap-rendered-content mark[data-color],
+.dark .blog-content-body mark[data-color] {
+  color: #0f172a !important;
+}
+
 /* Rich-Text Tiptap & Markdown Public Blog Typography */
 .tiptap-rendered-content,
 .blog-content-body {

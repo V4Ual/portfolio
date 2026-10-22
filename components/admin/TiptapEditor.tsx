@@ -8,6 +8,7 @@ import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import LinkExtension from "@tiptap/extension-link";
 import ImageExtension from "@tiptap/extension-image";
+import Highlight from "@tiptap/extension-highlight";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
@@ -17,6 +18,7 @@ import {
   Italic,
   Underline as UnderlineIcon,
   Strikethrough,
+  Highlighter,
   Heading1,
   Heading2,
   Heading3,
@@ -45,6 +47,7 @@ import {
   Copy,
   Check,
   Trash2,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,12 +60,26 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface TiptapEditorProps {
   content: string;
   onChange: (html: string) => void;
   postId?: string;
 }
+
+const HIGHLIGHT_COLORS = [
+  { label: "Yellow", value: "#fef08a", bgClass: "bg-[#fef08a]", borderClass: "border-amber-300" },
+  { label: "Green", value: "#bbf7d0", bgClass: "bg-[#bbf7d0]", borderClass: "border-emerald-300" },
+  { label: "Blue", value: "#bae6fd", bgClass: "bg-[#bae6fd]", borderClass: "border-sky-300" },
+  { label: "Pink", value: "#fbcfe8", bgClass: "bg-[#fbcfe8]", borderClass: "border-pink-300" },
+  { label: "Orange", value: "#fed7aa", bgClass: "bg-[#fed7aa]", borderClass: "border-orange-300" },
+  { label: "Purple", value: "#e9d5ff", bgClass: "bg-[#e9d5ff]", borderClass: "border-purple-300" },
+];
 
 // Reusable Toolbar Button that strictly prevents mousedown focus-stealing
 function ToolbarButton({
@@ -219,8 +236,14 @@ export default function TiptapEditor({ content, onChange, postId }: TiptapEditor
   const [imageCaption, setImageCaption] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
+  const [selectedLinkText, setSelectedLinkText] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Selection range preservation refs for modal dialogs and external clicks
+  const savedLinkRangeRef = useRef<{ from: number; to: number } | null>(null);
+  const savedImageRangeRef = useRef<{ from: number; to: number } | null>(null);
+  const lastSyncedPostIdRef = useRef(postId);
   const isInitialLoadedRef = useRef(false);
 
   const editor = useEditor({
@@ -243,13 +266,16 @@ export default function TiptapEditor({ content, onChange, postId }: TiptapEditor
         enableTabIndentation: true,
       }),
       Underline,
+      Highlight.configure({
+        multicolor: true,
+      }),
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),
       LinkExtension.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: "text-accent underline font-semibold hover:text-accent/80",
+          class: "text-accent underline font-semibold hover:text-accent/80 cursor-pointer",
           target: "_blank",
           rel: "noopener noreferrer",
         },
@@ -271,7 +297,7 @@ export default function TiptapEditor({ content, onChange, postId }: TiptapEditor
     editorProps: {
       attributes: {
         class:
-          "tiptap-rendered-content blog-content-body max-w-none focus:outline-none min-h-[420px] p-6 text-foreground text-base leading-relaxed selection:bg-accent/30",
+          "tiptap-rendered-content blog-content-body max-w-none focus:outline-none min-h-[420px] p-6 text-foreground text-base leading-relaxed selection:bg-cyan-500/30 dark:selection:bg-cyan-500/40",
       },
     },
     onUpdate: ({ editor }) => {
@@ -280,81 +306,225 @@ export default function TiptapEditor({ content, onChange, postId }: TiptapEditor
     immediatelyRender: false,
   });
 
-  // Sync content only on initial load or when post changes,
-  // NEVER while user is actively focused/editing (which would destroy active selections)
+  // Sync content ONLY if postId actually changes (e.g. navigated to a different post)
+  // NEVER overwrite content during active user drafting, which would destroy selections
   useEffect(() => {
     if (!editor) return;
     if (!isInitialLoadedRef.current) {
       isInitialLoadedRef.current = true;
       return;
     }
-    // If editor is currently focused, do not overwrite content to avoid selection loss
-    if (editor.isFocused) return;
 
-    if (content && editor.getHTML() !== content) {
-      editor.commands.setContent(content, false);
+    if (postId && postId !== lastSyncedPostIdRef.current) {
+      lastSyncedPostIdRef.current = postId;
+      editor.commands.setContent(content || "", false);
     }
-  }, [content, editor]);
+  }, [postId, content, editor]);
 
-  // Smart Heading toggle (lifts out of blockquote if currently trapped inside)
-  const toggleHeadingSmart = useCallback(
-    (level: 1 | 2 | 3 | 4) => {
+  // Smart inline mark applicator that trims leading/trailing whitespace if needed,
+  // without desyncing the ProseMirror selection on consecutive clicks
+  const applyInlineMark = useCallback(
+    (
+      action: "toggleBold" | "toggleItalic" | "toggleUnderline" | "toggleStrike" | "toggleCode" | "toggleHighlight",
+      options?: any
+    ) => {
       if (!editor) return;
-      if (editor.isActive("blockquote")) {
-        editor.chain().focus().lift("blockquote").toggleHeading({ level }).run();
+      const { state } = editor;
+      const { from, to, empty } = state.selection;
+
+      if (empty) {
+        if (action === "toggleHighlight") {
+          editor.chain().focus().toggleHighlight(options).run();
+        } else {
+          (editor.chain().focus() as any)[action]().run();
+        }
+        return;
+      }
+
+      // Check text in range and trim leading/trailing whitespace if present
+      const selectedText = state.doc.textBetween(from, to, " ");
+      const leadingSpaces = selectedText.search(/\S|$/);
+      const trailingSpaces = selectedText.length - selectedText.trimEnd().length;
+
+      let chain = editor.chain().focus();
+      if (leadingSpaces > 0 || trailingSpaces > 0) {
+        const cleanFrom = from + leadingSpaces;
+        const cleanTo = to - trailingSpaces;
+        if (cleanFrom < cleanTo) {
+          chain = chain.setTextSelection({ from: cleanFrom, to: cleanTo });
+        }
+      }
+
+      if (action === "toggleHighlight") {
+        chain.toggleHighlight(options).run();
       } else {
-        editor.chain().focus().toggleHeading({ level }).run();
+        (chain as any)[action]().run();
       }
     },
     [editor]
   );
 
-  // Smart Paragraph toggle (lifts out of blockquote or codeBlock and restores normal paragraph)
+  // Clean Heading toggle (directly transforms current block without corrupting coordinates)
+  const toggleHeadingSmart = useCallback(
+    (level: 1 | 2 | 3 | 4) => {
+      if (!editor) return;
+      editor.chain().focus().toggleHeading({ level }).run();
+    },
+    [editor]
+  );
+
+  // Normal Paragraph toggle
   const setParagraphSmart = useCallback(() => {
     if (!editor) return;
-    if (editor.isActive("blockquote")) {
-      editor.chain().focus().lift("blockquote").setParagraph().run();
-    } else if (editor.isActive("codeBlock")) {
-      editor.chain().focus().setParagraph().run();
-    } else {
-      editor.chain().focus().setParagraph().run();
-    }
+    editor.chain().focus().setParagraph().run();
   }, [editor]);
 
-  // Smart Blockquote toggle (explicitly lifts out if currently inside a blockquote, otherwise wraps)
+  // Clean Blockquote toggle
   const toggleBlockquoteSmart = useCallback(() => {
     if (!editor) return;
-    if (editor.isActive("blockquote")) {
-      const lifted = editor.chain().focus().lift("blockquote").run();
-      if (!lifted) {
-        editor.chain().focus().toggleBlockquote().run();
-      }
-    } else {
-      editor.chain().focus().toggleBlockquote().run();
-    }
+    editor.chain().focus().toggleBlockquote().run();
   }, [editor]);
 
-  // Smart Code Block toggle (lifts out of blockquote or cleanly toggles codeblock)
+  // Clean Code Block toggle
   const toggleCodeBlockSmart = useCallback(() => {
     if (!editor) return;
     if (editor.isActive("codeBlock")) {
       editor.chain().focus().setParagraph().run();
-    } else if (editor.isActive("blockquote")) {
-      editor.chain().focus().lift("blockquote").toggleCodeBlock({ language: "javascript" }).run();
     } else {
       editor.chain().focus().toggleCodeBlock({ language: "javascript" }).run();
     }
   }, [editor]);
 
-  // Smart Clear Formatting (lifts out of blockquote and resets marks/nodes)
+  // Smart Clear Formatting (strips all marks, highlights, and resets block to normal paragraph)
   const clearFormattingSmart = useCallback(() => {
     if (!editor) return;
     if (editor.isActive("blockquote")) {
-      editor.chain().focus().lift("blockquote").clearNodes().unsetAllMarks().run();
-    } else {
-      editor.chain().focus().clearNodes().unsetAllMarks().run();
+      editor.chain().focus().lift("blockquote").run();
     }
+    editor.chain().focus().unsetAllMarks().unsetHighlight().clearNodes().setParagraph().run();
+    toast.success("Formatting cleared");
   }, [editor]);
+
+  // Open Link Dialog: automatically expands selection to wrap the entire existing link if clicked
+  const handleOpenLinkDialog = useCallback(() => {
+    if (!editor) return;
+
+    // If cursor is on or inside an existing link mark, auto-extend selection to wrap the whole link
+    if (editor.isActive("link")) {
+      editor.chain().extendMarkRange("link").run();
+    }
+
+    const { from, to, empty } = editor.state.selection;
+    savedLinkRangeRef.current = { from, to };
+
+    const existingHref = editor.getAttributes("link").href || "";
+    setLinkUrl(existingHref);
+
+    const txt = empty ? "" : editor.state.doc.textBetween(from, to, " ");
+    setSelectedLinkText(txt);
+    setLinkDialogOpen(true);
+  }, [editor]);
+
+  // Open Image Dialog with preserved selection snapshot
+  const handleOpenImageDialog = useCallback(() => {
+    if (!editor) return;
+    const { from, to } = editor.state.selection;
+    savedImageRangeRef.current = { from, to };
+    setImageDialogOpen(true);
+  }, [editor]);
+
+  // Save Link: handles setting new link, updating existing link, and editing link text safely
+  const handleSetLink = () => {
+    if (!editor) return;
+    const targetRange = savedLinkRangeRef.current || {
+      from: editor.state.selection.from,
+      to: editor.state.selection.to,
+    };
+
+    const trimmedUrl = linkUrl.trim();
+    const trimmedText = selectedLinkText.trim();
+
+    if (!trimmedUrl) {
+      editor
+        .chain()
+        .focus()
+        .setTextSelection(targetRange)
+        .extendMarkRange("link")
+        .unsetLink()
+        .run();
+      toast.info("Link removed");
+    } else {
+      const validUrl = /^https?:\/\//i.test(trimmedUrl) || trimmedUrl.startsWith("#") || trimmedUrl.startsWith("/") || trimmedUrl.startsWith("mailto:")
+        ? trimmedUrl
+        : `https://${trimmedUrl}`;
+
+      if (targetRange.from === targetRange.to) {
+        // Collapsed cursor position: insert new text with link mark
+        const displayText = trimmedText || validUrl;
+        editor
+          .chain()
+          .focus()
+          .setTextSelection(targetRange)
+          .insertContent({
+            type: "text",
+            text: displayText,
+            marks: [{ type: "link", attrs: { href: validUrl } }],
+          })
+          .run();
+      } else {
+        const originalText = editor.state.doc.textBetween(targetRange.from, targetRange.to, " ");
+        if (trimmedText && trimmedText !== originalText) {
+          // Display text was changed: replace text with updated link mark
+          editor
+            .chain()
+            .focus()
+            .setTextSelection(targetRange)
+            .insertContent({
+              type: "text",
+              text: trimmedText,
+              marks: [{ type: "link", attrs: { href: validUrl } }],
+            })
+            .run();
+        } else {
+          // Just update the link URL mark on the target range
+          editor
+            .chain()
+            .focus()
+            .setTextSelection(targetRange)
+            .extendMarkRange("link")
+            .setLink({ href: validUrl })
+            .run();
+        }
+      }
+      toast.success("Link saved");
+    }
+
+    setLinkDialogOpen(false);
+    savedLinkRangeRef.current = null;
+    setSelectedLinkText("");
+    setLinkUrl("");
+  };
+
+  // Remove Link directly from the Dialog
+  const handleRemoveLink = () => {
+    if (!editor) return;
+    const targetRange = savedLinkRangeRef.current || {
+      from: editor.state.selection.from,
+      to: editor.state.selection.to,
+    };
+    editor
+      .chain()
+      .focus()
+      .setTextSelection(targetRange)
+      .extendMarkRange("link")
+      .unsetLink()
+      .run();
+    setLinkDialogOpen(false);
+    savedLinkRangeRef.current = null;
+    setSelectedLinkText("");
+    setLinkUrl("");
+    toast.info("Link removed");
+  };
 
   if (!editor) return null;
 
@@ -379,14 +549,21 @@ export default function TiptapEditor({ content, onChange, postId }: TiptapEditor
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Upload failed");
 
+      const targetRange = savedImageRangeRef.current || {
+        from: editor.state.selection.from,
+        to: editor.state.selection.to,
+      };
+
       editor
         .chain()
         .focus()
+        .setTextSelection(targetRange)
         .setImage({ src: data.url, alt: imageAlt || file.name, title: imageCaption || undefined })
         .run();
 
       toast.success("Image uploaded & stored in database!");
       setImageDialogOpen(false);
+      savedImageRangeRef.current = null;
       setImageAlt("");
       setImageCaption("");
       setImageUrl("");
@@ -404,26 +581,21 @@ export default function TiptapEditor({ content, onChange, postId }: TiptapEditor
       toast.error("Please enter a valid image URL.");
       return;
     }
+    const targetRange = savedImageRangeRef.current || {
+      from: editor.state.selection.from,
+      to: editor.state.selection.to,
+    };
     editor
       .chain()
       .focus()
+      .setTextSelection(targetRange)
       .setImage({ src: imageUrl.trim(), alt: imageAlt || "", title: imageCaption || undefined })
       .run();
     setImageDialogOpen(false);
+    savedImageRangeRef.current = null;
     setImageUrl("");
     setImageAlt("");
     setImageCaption("");
-  };
-
-  // Handle Link insertion
-  const handleSetLink = () => {
-    if (!linkUrl.trim()) {
-      editor.chain().focus().unsetLink().run();
-    } else {
-      editor.chain().focus().setLink({ href: linkUrl.trim() }).run();
-    }
-    setLinkDialogOpen(false);
-    setLinkUrl("");
   };
 
   return (
@@ -432,45 +604,63 @@ export default function TiptapEditor({ content, onChange, postId }: TiptapEditor
         isFullScreen ? "fixed inset-0 z-[100] rounded-none flex flex-col bg-background" : "shadow-sm"
       }`}
     >
-      {/* Floating Selection Bubble Menu (Pops up directly on selected text for precise formatting) */}
+      {/* Floating Selection Bubble Menu (Pops up directly on selected text for instant formatting) */}
       <BubbleMenu
         editor={editor}
         className="flex items-center gap-0.5 p-1 rounded-xl border border-border/80 bg-background/95 backdrop-blur-xl shadow-2xl z-50 text-xs"
       >
         <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBold().run()}
+          onClick={() => applyInlineMark("toggleBold")}
           isActive={editor.isActive("bold")}
           title="Bold (Ctrl+B)"
         >
           <Bold className="w-3.5 h-3.5" />
         </ToolbarButton>
         <ToolbarButton
-          onClick={() => editor.chain().focus().toggleItalic().run()}
+          onClick={() => applyInlineMark("toggleItalic")}
           isActive={editor.isActive("italic")}
           title="Italic (Ctrl+I)"
         >
           <Italic className="w-3.5 h-3.5" />
         </ToolbarButton>
         <ToolbarButton
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          onClick={() => applyInlineMark("toggleUnderline")}
           isActive={editor.isActive("underline")}
           title="Underline (Ctrl+U)"
         >
           <UnderlineIcon className="w-3.5 h-3.5" />
         </ToolbarButton>
         <ToolbarButton
-          onClick={() => editor.chain().focus().toggleStrike().run()}
+          onClick={() => applyInlineMark("toggleStrike")}
           isActive={editor.isActive("strike")}
           title="Strikethrough"
         >
           <Strikethrough className="w-3.5 h-3.5" />
         </ToolbarButton>
+
+        {/* Highlight Quick Button in Bubble Menu */}
         <ToolbarButton
-          onClick={() => editor.chain().focus().toggleCode().run()}
+          onClick={() => applyInlineMark("toggleHighlight")}
+          isActive={editor.isActive("highlight")}
+          title="Highlight Text (Default Yellow)"
+          className={editor.isActive("highlight") ? "text-amber-500 bg-amber-500/20" : ""}
+        >
+          <Highlighter className="w-3.5 h-3.5" />
+        </ToolbarButton>
+
+        <ToolbarButton
+          onClick={() => applyInlineMark("toggleCode")}
           isActive={editor.isActive("code")}
           title="Inline Code"
         >
           <Code className="w-3.5 h-3.5" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={handleOpenLinkDialog}
+          isActive={editor.isActive("link")}
+          title="Link (Ctrl+K)"
+        >
+          <LinkIcon className="w-3.5 h-3.5" />
         </ToolbarButton>
         <div className="w-[1px] h-4 bg-border/80 mx-0.5" />
         <ToolbarButton
@@ -570,32 +760,92 @@ export default function TiptapEditor({ content, onChange, postId }: TiptapEditor
         <div className="flex items-center gap-0.5">
           <ToolbarButton
             isActive={editor.isActive("bold")}
-            onClick={() => editor.chain().focus().toggleBold().run()}
+            onClick={() => applyInlineMark("toggleBold")}
             title="Bold (Ctrl+B)"
           >
             <Bold className="w-4 h-4" />
           </ToolbarButton>
           <ToolbarButton
             isActive={editor.isActive("italic")}
-            onClick={() => editor.chain().focus().toggleItalic().run()}
+            onClick={() => applyInlineMark("toggleItalic")}
             title="Italic (Ctrl+I)"
           >
             <Italic className="w-4 h-4" />
           </ToolbarButton>
           <ToolbarButton
             isActive={editor.isActive("underline")}
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            onClick={() => applyInlineMark("toggleUnderline")}
             title="Underline (Ctrl+U)"
           >
             <UnderlineIcon className="w-4 h-4" />
           </ToolbarButton>
           <ToolbarButton
             isActive={editor.isActive("strike")}
-            onClick={() => editor.chain().focus().toggleStrike().run()}
+            onClick={() => applyInlineMark("toggleStrike")}
             title="Strikethrough"
           >
             <Strikethrough className="w-4 h-4" />
           </ToolbarButton>
+
+          {/* Highlighter Tool with Color Picker Popover */}
+          <Popover>
+            <div className="flex items-center rounded-lg border border-transparent hover:border-border/60">
+              <ToolbarButton
+                isActive={editor.isActive("highlight")}
+                onClick={() => applyInlineMark("toggleHighlight")}
+                title="Highlight Selected Text (Click to toggle default yellow)"
+                className={editor.isActive("highlight") ? "text-amber-500 bg-amber-500/20" : ""}
+              >
+                <Highlighter className="w-4 h-4" />
+              </ToolbarButton>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  className="h-8 px-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-r-lg transition-colors cursor-pointer"
+                  title="Choose Highlight Color"
+                >
+                  <ChevronDown className="w-3 h-3" />
+                </button>
+              </PopoverTrigger>
+            </div>
+            <PopoverContent
+              align="start"
+              className="w-48 p-2.5 rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md shadow-xl space-y-2 select-none"
+            >
+              <div className="text-[11px] font-semibold text-muted-foreground px-1">
+                Highlight Color
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {HIGHLIGHT_COLORS.map((col) => (
+                  <button
+                    key={col.value}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      applyInlineMark("toggleHighlight", { color: col.value });
+                    }}
+                    className={`h-7 rounded-lg flex items-center justify-center border transition-all cursor-pointer hover:scale-105 ${col.bgClass} ${col.borderClass}`}
+                    title={col.label}
+                  >
+                    <span className="text-[10px] font-bold text-stone-900">{col.label[0]}</span>
+                  </button>
+                ))}
+              </div>
+              {editor.isActive("highlight") && (
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    editor.chain().focus().unsetHighlight().run();
+                  }}
+                  className="w-full text-center text-[11px] font-medium text-destructive hover:bg-destructive/10 py-1 rounded-md transition-colors cursor-pointer"
+                >
+                  Remove Highlight
+                </button>
+              )}
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="w-[1px] h-5 bg-border/80 mx-1" />
@@ -665,7 +915,7 @@ export default function TiptapEditor({ content, onChange, postId }: TiptapEditor
         <div className="flex items-center gap-0.5">
           <ToolbarButton
             isActive={editor.isActive("code")}
-            onClick={() => editor.chain().focus().toggleCode().run()}
+            onClick={() => applyInlineMark("toggleCode")}
             title="Inline Code"
           >
             <Code className="w-4 h-4" />
@@ -691,18 +941,15 @@ export default function TiptapEditor({ content, onChange, postId }: TiptapEditor
         <div className="flex items-center gap-0.5">
           <ToolbarButton
             isActive={editor.isActive("link")}
-            onClick={() => {
-              setLinkUrl(editor.getAttributes("link").href || "");
-              setLinkDialogOpen(true);
-            }}
-            title="Insert / Edit Link"
+            onClick={handleOpenLinkDialog}
+            title="Insert / Edit Link (Ctrl+K)"
           >
             <LinkIcon className="w-4 h-4" />
           </ToolbarButton>
           {editor.isActive("link") && (
             <ToolbarButton
-              className="text-destructive"
-              onClick={() => editor.chain().focus().unsetLink().run()}
+              className="text-destructive hover:bg-destructive/15"
+              onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()}
               title="Remove Link"
             >
               <Unlink className="w-4 h-4" />
@@ -711,7 +958,7 @@ export default function TiptapEditor({ content, onChange, postId }: TiptapEditor
 
           <ToolbarButton
             className="text-accent font-semibold"
-            onClick={() => setImageDialogOpen(true)}
+            onClick={handleOpenImageDialog}
             title="Upload / Insert Image (PostgreSQL Buffer Storage)"
           >
             <ImageIcon className="w-4 h-4" />
@@ -724,7 +971,7 @@ export default function TiptapEditor({ content, onChange, postId }: TiptapEditor
         <div className="flex items-center gap-0.5 ml-auto">
           <ToolbarButton
             onClick={clearFormattingSmart}
-            title="Clear Formatting"
+            title="Clear Formatting (Marks, Highlights & Styles)"
           >
             <RemoveFormatting className="w-4 h-4" />
           </ToolbarButton>
@@ -845,31 +1092,71 @@ export default function TiptapEditor({ content, onChange, postId }: TiptapEditor
       </Dialog>
 
       {/* Link Dialog */}
-      <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
+      <Dialog
+        open={linkDialogOpen}
+        onOpenChange={(open) => {
+          setLinkDialogOpen(open);
+          if (!open) {
+            savedLinkRangeRef.current = null;
+            setSelectedLinkText("");
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <LinkIcon className="w-5 h-5 text-accent" />
-              <span>Insert or Edit Hyperlink</span>
+              <span>{editor.isActive("link") ? "Edit Hyperlink" : "Insert Hyperlink"}</span>
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-3 py-3">
             <div className="space-y-1.5">
+              <Label htmlFor="link-text" className="text-xs font-semibold">
+                Text to Display
+              </Label>
+              <Input
+                id="link-text"
+                placeholder="Text to display in article"
+                value={selectedLinkText}
+                onChange={(e) => setSelectedLinkText(e.target.value)}
+                className="text-xs"
+              />
+            </div>
+
+            <div className="space-y-1.5">
               <Label htmlFor="link-href" className="text-xs font-semibold">
-                URL Destination
+                Destination URL *
               </Label>
               <Input
                 id="link-href"
                 placeholder="https://example.com"
                 value={linkUrl}
                 onChange={(e) => setLinkUrl(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleSetLink();
+                  }
+                }}
                 className="text-xs"
+                autoFocus
               />
             </div>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
+            {editor.isActive("link") && (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={handleRemoveLink}
+                className="sm:mr-auto text-xs"
+              >
+                Remove Link
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"
@@ -882,7 +1169,7 @@ export default function TiptapEditor({ content, onChange, postId }: TiptapEditor
               type="button"
               size="sm"
               onClick={handleSetLink}
-              className="bg-accent text-accent-foreground"
+              className="bg-accent text-accent-foreground font-semibold"
             >
               Save Link
             </Button>
