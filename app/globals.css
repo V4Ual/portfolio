@@ -86,7 +86,7 @@
     scroll-behavior: smooth;
   }
   body {
-    @apply bg-background text-foreground overflow-x-hidden antialiased;
+    @apply bg-background text-foreground overflow-x-clip antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 

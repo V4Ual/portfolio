@@ -159,7 +159,7 @@ export default async function BlogDetailsPage({
   const enhancedContent = isHtmlContent ? injectHeadingIds(post.content) : post.content;
 
   return (
-    <div className="min-h-screen bg-background text-foreground bg-ambient-mesh flex flex-col justify-between relative overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground bg-ambient-mesh flex flex-col justify-between relative overflow-x-clip">
       {/* Scroll Reading Progress Bar */}
       <ReadingProgressBar />
 

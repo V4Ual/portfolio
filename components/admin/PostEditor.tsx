@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  AlignLeft,
   ArrowLeft,
   Eye,
   Loader2,
@@ -38,6 +39,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { TableOfContents } from "@/components/TableOfContents";
 import {
   Dialog,
   DialogContent,
@@ -515,6 +517,57 @@ export default function PostEditor({ initialData }: PostEditorProps) {
 
         {/* Right Column (Metadata & Inspector Sidebar) */}
         <div className="space-y-6">
+          {/* Sticky Table of Contents / Outline Card */}
+          <div className="sticky top-20 z-10 rounded-2xl border border-border/80 bg-card/85 backdrop-blur-md p-5 space-y-3.5 shadow-sm">
+            <div className="flex items-center justify-between border-b border-border/60 pb-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                <AlignLeft className="w-4 h-4 text-accent" />
+                <span>Table of Contents</span>
+              </h3>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-accent/15 text-accent font-semibold border border-accent/20">
+                Sticky Outline
+              </span>
+            </div>
+
+            <p className="text-[11px] text-muted-foreground leading-snug">
+              Click any heading to smoothly jump and focus inside the editor canvas.
+            </p>
+
+            <TableOfContents
+              content={content}
+              inline
+              onItemClick={(id, text) => {
+                if (editorRef.current) {
+                  let jumped = false;
+                  editorRef.current.state.doc.descendants((node: any, pos: number) => {
+                    if (
+                      !jumped &&
+                      node.type.name === "heading" &&
+                      node.textContent.trim().toLowerCase() === text.toLowerCase()
+                    ) {
+                      editorRef.current.chain().focus().setTextSelection(pos + 1).scrollIntoView().run();
+                      jumped = true;
+                      return false;
+                    }
+                  });
+
+                  if (!jumped) {
+                    const editorDom = editorRef.current.view?.dom;
+                    if (editorDom) {
+                      const headings = editorDom.querySelectorAll("h1, h2, h3, h4");
+                      for (const h of headings) {
+                        if (h.textContent?.trim().toLowerCase().includes(text.toLowerCase())) {
+                          h.scrollIntoView({ behavior: "smooth", block: "center" });
+                          break;
+                        }
+                      }
+                    }
+                  }
+                }
+              }}
+            />
+          </div>
+
           {/* Cover / Featured Image Card */}
           <div className="rounded-2xl border border-border/80 bg-card/60 backdrop-blur-sm p-5 space-y-4 shadow-xs">
             <div className="flex items-center justify-between">

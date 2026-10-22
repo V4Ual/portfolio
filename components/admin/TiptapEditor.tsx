@@ -54,6 +54,7 @@ import {
   Check,
   Trash2,
   ChevronDown,
+  PanelRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -237,6 +238,7 @@ function TiptapCodeBlockView({
 
 export default function TiptapEditor({ content, onChange, postId, onEditorReady }: TiptapEditorProps) {
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isOutlinePinned, setIsOutlinePinned] = useState(false);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [imageAlt, setImageAlt] = useState("");
@@ -775,6 +777,90 @@ export default function TiptapEditor({ content, onChange, postId, onEditorReady 
           >
             <Heading4 className="w-4 h-4" />
           </ToolbarButton>
+
+          {/* Sticky Document Outline / Table of Contents Navigator */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                className="inline-flex items-center gap-1.5 px-2 h-8 rounded-lg text-xs font-semibold hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer border border-transparent hover:border-border/60"
+                title="Table of Contents (Jump to Section)"
+              >
+                <AlignLeft className="w-3.5 h-3.5 text-accent" />
+                <span className="hidden sm:inline text-[11px] font-bold">TOC</span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="start"
+              className="w-64 p-3 rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md shadow-xl space-y-2 select-none"
+            >
+              <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <AlignLeft className="w-3.5 h-3.5 text-accent" />
+                  <span>Document Outline</span>
+                </span>
+                <span className="text-[10px] font-mono text-muted-foreground">
+                  Click to jump
+                </span>
+              </div>
+
+              {/* Dynamic Outline List */}
+              <div className="max-h-56 overflow-y-auto space-y-1 pr-1 custom-editor-scrollbar">
+                {(() => {
+                  const headings: { text: string; level: number; pos: number }[] = [];
+                  editor.state.doc.descendants((node, pos) => {
+                    if (node.type.name === "heading") {
+                      const text = node.textContent.trim();
+                      if (text) {
+                        headings.push({ text, level: node.attrs.level, pos });
+                      }
+                    }
+                  });
+
+                  if (headings.length === 0) {
+                    return (
+                      <p className="text-xs text-muted-foreground py-2 text-center italic">
+                        No headings yet. Use H1, H2, or H3 to generate outline.
+                      </p>
+                    );
+                  }
+
+                  return headings.map((h, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        editor.chain().focus().setTextSelection(h.pos + 1).scrollIntoView().run();
+                      }}
+                      className={`w-full text-left rounded-lg px-2 py-1.5 hover:bg-muted text-xs transition-colors flex items-center gap-1.5 truncate cursor-pointer ${
+                        h.level === 1
+                          ? "font-bold text-foreground"
+                          : h.level === 2
+                          ? "font-semibold text-foreground/90 pl-3"
+                          : "text-muted-foreground pl-5 text-[11px]"
+                      }`}
+                    >
+                      <span className="text-[9px] font-mono font-bold text-accent uppercase">
+                        H{h.level}
+                      </span>
+                      <span className="truncate">{h.text}</span>
+                    </button>
+                  ));
+                })()}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Toggle Sticky Pinned Outline in Editor */}
+          <ToolbarButton
+            onClick={() => setIsOutlinePinned(!isOutlinePinned)}
+            isActive={isOutlinePinned}
+            title={isOutlinePinned ? "Hide Pinned Table of Contents" : "Pin Table of Contents to Editor Side"}
+          >
+            <PanelRight className="w-3.5 h-3.5" />
+          </ToolbarButton>
         </div>
 
         <div className="w-[1px] h-5 bg-border/80 mx-1" />
@@ -1148,9 +1234,76 @@ export default function TiptapEditor({ content, onChange, postId, onEditorReady 
         </div>
       </div>
 
-      {/* Editor Content Area with Dedicated Long-Text Scroller */}
-      <div className={`overflow-y-auto ${isFullScreen ? "flex-1 p-8 max-w-4xl mx-auto w-full" : "max-h-[680px] custom-editor-scrollbar"}`}>
-        <EditorContent editor={editor} />
+      {/* Editor Content Area with Dedicated Long-Text Scroller and Sticky Pinned Outline */}
+      <div className="flex divide-x divide-border/60 relative">
+        <div className={`overflow-y-auto flex-1 min-w-0 ${isFullScreen ? "p-8 max-w-4xl mx-auto w-full" : "max-h-[680px] custom-editor-scrollbar"}`}>
+          <EditorContent editor={editor} />
+        </div>
+
+        {isOutlinePinned && (
+          <aside className="w-64 shrink-0 bg-card/95 backdrop-blur-md p-4 hidden md:flex flex-col gap-2.5 max-h-[680px] overflow-y-auto custom-editor-scrollbar select-none sticky top-0 self-start border-l border-border/70 z-10 shadow-xs">
+            <div className="flex items-center justify-between border-b border-border/60 pb-2">
+              <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <AlignLeft className="w-3.5 h-3.5 text-accent" />
+                <span>Pinned Outline</span>
+              </span>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => setIsOutlinePinned(false)}
+                className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+                title="Unpin Table of Contents"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="space-y-1 overflow-y-auto pr-1 custom-editor-scrollbar">
+              {(() => {
+                const headings: { text: string; level: number; pos: number }[] = [];
+                editor.state.doc.descendants((node, pos) => {
+                  if (node.type.name === "heading") {
+                    const text = node.textContent.trim();
+                    if (text) {
+                      headings.push({ text, level: node.attrs.level, pos });
+                    }
+                  }
+                });
+
+                if (headings.length === 0) {
+                  return (
+                    <p className="text-xs text-muted-foreground py-4 text-center italic">
+                      No headings yet. Use H1, H2, or H3 to populate outline.
+                    </p>
+                  );
+                }
+
+                return headings.map((h, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      editor.chain().focus().setTextSelection(h.pos + 1).scrollIntoView().run();
+                    }}
+                    className={`w-full text-left rounded-lg px-2 py-1.5 hover:bg-muted text-xs transition-colors flex items-center gap-1.5 truncate cursor-pointer ${
+                      h.level === 1
+                        ? "font-bold text-foreground"
+                        : h.level === 2
+                        ? "font-semibold text-foreground/90 pl-3"
+                        : "text-muted-foreground pl-5 text-[11px]"
+                    }`}
+                  >
+                    <span className="text-[9px] font-mono font-bold text-accent uppercase">
+                      H{h.level}
+                    </span>
+                    <span className="truncate">{h.text}</span>
+                  </button>
+                ));
+              })()}
+            </div>
+          </aside>
+        )}
       </div>
 
       {/* Image Upload Dialog */}
