@@ -20,8 +20,20 @@ import { ReadingProgressBar } from "@/components/ReadingProgressBar";
 import { ArticleCodeEnhancer } from "@/components/ArticleCodeEnhancer";
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
+import { TableOfContents } from "@/components/TableOfContents";
+import { slugify } from "@/lib/utils";
 import type { Metadata } from "next";
 import { cache } from "react";
+
+function injectHeadingIds(html: string): string {
+  if (!html) return "";
+  return html.replace(/<(h[23])([^>]*)>(.*?)<\/\1>/gi, (match, tag, attrs, text) => {
+    if (/id=["'][^"']+["']/i.test(attrs)) return match;
+    const cleanText = text.replace(/<[^>]+>/g, "").trim();
+    const id = slugify(cleanText);
+    return `<${tag}${attrs} id="${id}">${text}</${tag}>`;
+  });
+}
 
 export const revalidate = 60;
 
@@ -144,6 +156,7 @@ export default async function BlogDetailsPage({
   };
 
   const isHtmlContent = post.content.trim().startsWith("<");
+  const enhancedContent = isHtmlContent ? injectHeadingIds(post.content) : post.content;
 
   return (
     <div className="min-h-screen bg-background text-foreground bg-ambient-mesh flex flex-col justify-between relative overflow-x-hidden">
@@ -154,7 +167,7 @@ export default async function BlogDetailsPage({
       <Navigation />
 
       {/* Main Blog Post Container */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-20 w-full space-y-10 sm:space-y-12 flex-1">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-20 w-full space-y-10 sm:space-y-12 flex-1">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
@@ -244,110 +257,121 @@ export default async function BlogDetailsPage({
           )}
         </header>
 
-        {/* Article Body wrapped with Code Enhancer */}
-        <ArticleCodeEnhancer>
-          <article className="blog-content-body max-w-none text-foreground/90 break-words">
-            {isHtmlContent ? (
-              <div
-                dangerouslySetInnerHTML={{ __html: post.content }}
-                className="tiptap-rendered-content"
-              />
-            ) : (
-              <div className="blog-content-body">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {post.content}
-                </ReactMarkdown>
+        {/* Mobile Table of Contents */}
+        <TableOfContents content={enhancedContent} mobileOnly />
+
+        {/* 2-Column Responsive Layout: Content Body + Sticky Table of Contents Sidebar */}
+        <div className="flex flex-col lg:flex-row items-start gap-10 xl:gap-14">
+          <div className="flex-1 min-w-0 w-full space-y-10">
+            {/* Article Body wrapped with Code Enhancer */}
+            <ArticleCodeEnhancer>
+              <article className="blog-content-body max-w-none text-foreground/90 break-words">
+                {isHtmlContent ? (
+                  <div
+                    dangerouslySetInnerHTML={{ __html: enhancedContent }}
+                    className="tiptap-rendered-content"
+                  />
+                ) : (
+                  <div className="blog-content-body">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {post.content}
+                    </ReactMarkdown>
+                  </div>
+                )}
+              </article>
+            </ArticleCodeEnhancer>
+
+            {/* Share Banner at bottom of article */}
+            <div className="p-6 rounded-2xl border border-border/80 bg-card/70 backdrop-blur-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+              <div className="space-y-1">
+                <h3 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
+                  <Share2 className="w-4 h-4 text-accent" />
+                  <span>Enjoyed this article?</span>
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Share it with your developer network or peers who might find it helpful.
+                </p>
               </div>
-            )}
-          </article>
-        </ArticleCodeEnhancer>
-
-        {/* Share Banner at bottom of article */}
-        <div className="p-6 rounded-2xl border border-border/80 bg-card/70 backdrop-blur-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
-          <div className="space-y-1">
-            <h3 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
-              <Share2 className="w-4 h-4 text-accent" />
-              <span>Enjoyed this article?</span>
-            </h3>
-            <p className="text-xs text-muted-foreground">
-              Share it with your developer network or peers who might find it helpful.
-            </p>
-          </div>
-          <BlogShareMenu title={post.title} url={currentUrl} />
-        </div>
-
-        {/* Author Profile Card */}
-        <div className="rounded-2xl mb-6 p-6 sm:p-7 border border-border/80 bg-card/60 backdrop-blur-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-accent to-primary flex items-center justify-center text-accent-foreground font-black text-xl shrink-0 shadow-md">
-              VS
+              <BlogShareMenu title={post.title} url={currentUrl} />
             </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-bold text-accent uppercase tracking-wider">
-                  Author
-                </span>
-                <span className="text-border">&bull;</span>
-                <span className="text-[11px] text-muted-foreground font-mono">
-                  Full-Stack Engineer
-                </span>
+
+            {/* Author Profile Card */}
+            <div className="rounded-2xl mb-6 p-6 sm:p-7 border border-border/80 bg-card/60 backdrop-blur-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-accent to-primary flex items-center justify-center text-accent-foreground font-black text-xl shrink-0 shadow-md">
+                  VS
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-bold text-accent uppercase tracking-wider">
+                      Author
+                    </span>
+                    <span className="text-border">&bull;</span>
+                    <span className="text-[11px] text-muted-foreground font-mono">
+                      Full-Stack Engineer
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground">
+                    {post.author?.name || "Vishal Sharma"}
+                  </h3>
+                  <p className="text-xs text-muted-foreground max-w-md leading-relaxed">
+                    Specializing in high-performance web applications, Next.js, TypeScript, PostgreSQL, and scalable full-stack architectures.
+                  </p>
+                </div>
               </div>
-              <h3 className="text-lg font-bold text-foreground">
-                {post.author?.name || "Vishal Sharma"}
-              </h3>
-              <p className="text-xs text-muted-foreground max-w-md leading-relaxed">
-                Specializing in high-performance web applications, Next.js, TypeScript, PostgreSQL, and scalable full-stack architectures.
-              </p>
-            </div>
-          </div>
-          <Link
-            href="/#contact"
-            className="text-xs font-semibold px-4 py-2.5 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 transition-all shrink-0 shadow-md active:scale-95"
-          >
-            Get in Touch
-          </Link>
-        </div>
-
-        {/* Related Posts */}
-        {relatedPosts.length > 0 && (
-          <section className="space-y-4 pt-6 border-t border-border/60">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-accent" />
-                <span>Related Articles</span>
-              </h2>
               <Link
-                href="/blog"
-                className="text-xs font-semibold text-accent hover:underline flex items-center gap-1"
+                href="/#contact"
+                className="text-xs font-semibold px-4 py-2.5 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 transition-all shrink-0 shadow-md active:scale-95"
               >
-                <span>View all</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                Get in Touch
               </Link>
             </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {relatedPosts.map((rel) => (
-                <Link
-                  key={rel.id}
-                  href={`/blog/${rel.slug}`}
-                  className="p-5 rounded-2xl border border-border/70 bg-card/60 hover:bg-card hover:border-accent/60 transition-all duration-200 space-y-2.5 block group shadow-xs hover:-translate-y-0.5"
-                >
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono">
-                    <span className="text-accent font-semibold">
-                      {rel.category?.name || "Article"}
-                    </span>
-                    <span>{rel.readTime}</span>
-                  </div>
-                  <h4 className="font-bold text-foreground text-sm line-clamp-1 group-hover:text-accent transition-colors">
-                    {rel.title}
-                  </h4>
-                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                    {rel.excerpt}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
+
+            {/* Related Posts */}
+            {relatedPosts.length > 0 && (
+              <section className="space-y-4 pt-6 border-t border-border/60">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-accent" />
+                    <span>Related Articles</span>
+                  </h2>
+                  <Link
+                    href="/blog"
+                    className="text-xs font-semibold text-accent hover:underline flex items-center gap-1"
+                  >
+                    <span>View all</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {relatedPosts.map((rel) => (
+                    <Link
+                      key={rel.id}
+                      href={`/blog/${rel.slug}`}
+                      className="p-5 rounded-2xl border border-border/70 bg-card/60 hover:bg-card hover:border-accent/60 transition-all duration-200 space-y-2.5 block group shadow-xs hover:-translate-y-0.5"
+                    >
+                      <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono">
+                        <span className="text-accent font-semibold">
+                          {rel.category?.name || "Article"}
+                        </span>
+                        <span>{rel.readTime}</span>
+                      </div>
+                      <h4 className="font-bold text-foreground text-sm line-clamp-1 group-hover:text-accent transition-colors">
+                        {rel.title}
+                      </h4>
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                        {rel.excerpt}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+
+          {/* Sticky Desktop Table of Contents Sidebar */}
+          <TableOfContents content={enhancedContent} />
+        </div>
       </main>
 
       {/* Footer */}

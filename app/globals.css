@@ -445,28 +445,104 @@ mark,
   margin: 2.75rem 0;
 }
 
+/* Custom sleek editor scrollbar for long technical articles */
+.custom-editor-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-editor-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-editor-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+.custom-editor-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* Enhanced Table Styling in Editor & Public Blog */
 .tiptap-rendered-content table,
 .blog-content-body table {
   width: 100%;
-  border-collapse: collapse;
-  margin: 1.75rem 0;
-  font-size: 0.95rem;
-}
-
-.tiptap-rendered-content th,
-.blog-content-body th,
-.tiptap-rendered-content td,
-.blog-content-body td {
-  padding: 0.75rem 1rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 2rem 0;
+  font-size: 0.925rem;
+  border-radius: 0.75rem;
+  overflow: hidden;
   border: 1px solid var(--border);
-  text-align: left;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.05);
 }
 
 .tiptap-rendered-content th,
 .blog-content-body th {
   background: var(--muted);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--foreground);
+  padding: 0.85rem 1.1rem;
+  border-bottom: 2px solid var(--border);
+  border-right: 1px solid var(--border);
+  text-align: left;
+  letter-spacing: -0.01em;
+}
+
+.tiptap-rendered-content th:last-child,
+.blog-content-body th:last-child {
+  border-right: none;
+}
+
+.tiptap-rendered-content td,
+.blog-content-body td {
+  padding: 0.8rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  text-align: left;
+  line-height: 1.6;
+  color: var(--foreground);
+}
+
+.tiptap-rendered-content td:last-child,
+.blog-content-body td:last-child {
+  border-right: none;
+}
+
+.tiptap-rendered-content tr:last-child td,
+.blog-content-body tr:last-child td {
+  border-bottom: none;
+}
+
+.tiptap-rendered-content tr:nth-child(even) td,
+.blog-content-body tr:nth-child(even) td {
+  background: color-mix(in oklch, var(--muted) 35%, transparent);
+}
+
+.tiptap-rendered-content tr:hover td,
+.blog-content-body tr:hover td {
+  background: color-mix(in oklch, var(--muted) 60%, transparent);
+}
+
+/* Selected cell in Tiptap editor */
+.tiptap .selectedCell:after {
+  background: rgba(6, 182, 212, 0.2);
+  content: "";
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
+.tiptap .column-resize-handle {
+  background-color: var(--accent);
+  bottom: -2px;
+  pointer-events: none;
+  position: absolute;
+  right: -2px;
+  top: 0;
+  width: 4px;
 }
 
 

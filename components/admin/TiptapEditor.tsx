@@ -9,6 +9,10 @@ import TextAlign from "@tiptap/extension-text-align";
 import LinkExtension from "@tiptap/extension-link";
 import ImageExtension from "@tiptap/extension-image";
 import Highlight from "@tiptap/extension-highlight";
+import { Table as TiptapTable } from "@tiptap/extension-table";
+import TableRow from "@tiptap/extension-table-row";
+import TableHeader from "@tiptap/extension-table-header";
+import TableCell from "@tiptap/extension-table-cell";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
@@ -36,6 +40,8 @@ import {
   Link as LinkIcon,
   Unlink,
   Image as ImageIcon,
+  Table as TableIcon,
+  Plus,
   Minus,
   Undo2,
   Redo2,
@@ -270,6 +276,15 @@ export default function TiptapEditor({ content, onChange, postId, onEditorReady 
       Highlight.configure({
         multicolor: true,
       }),
+      TiptapTable.configure({
+        resizable: true,
+        HTMLAttributes: {
+          class: "border-collapse w-full my-6 text-sm border border-border/80",
+        },
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),
@@ -701,8 +716,8 @@ export default function TiptapEditor({ content, onChange, postId, onEditorReady 
         </ToolbarButton>
       </BubbleMenu>
 
-      {/* Rich-Text Formatting Toolbar */}
-      <div className="flex flex-wrap items-center gap-1 p-2 bg-muted/40 border-b border-border/70 text-muted-foreground select-none">
+      {/* Sticky Formatting Toolbar with glassmorphism */}
+      <div className="sticky top-0 z-20 flex flex-wrap items-center gap-1 p-2 bg-card/95 backdrop-blur-md border-b border-border/80 text-muted-foreground select-none shadow-xs">
         {/* Undo / Redo */}
         <div className="flex items-center">
           <ToolbarButton
@@ -975,6 +990,147 @@ export default function TiptapEditor({ content, onChange, postId, onEditorReady 
 
         <div className="w-[1px] h-5 bg-border/80 mx-1" />
 
+        {/* Table Management */}
+        <Popover>
+          <div className="flex items-center rounded-lg border border-transparent hover:border-border/60">
+            <ToolbarButton
+              isActive={editor.isActive("table")}
+              onClick={() => {
+                if (!editor.isActive("table")) {
+                  editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+                  toast.success("Inserted 3x3 Table");
+                }
+              }}
+              title={editor.isActive("table") ? "Inside Table (Click arrow for actions)" : "Insert 3x3 Data Table"}
+            >
+              <TableIcon className="w-4 h-4" />
+            </ToolbarButton>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                className="h-8 px-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-r-lg transition-colors cursor-pointer"
+                title="Table Actions"
+              >
+                <ChevronDown className="w-3 h-3" />
+              </button>
+            </PopoverTrigger>
+          </div>
+          <PopoverContent
+            align="start"
+            className="w-56 p-2 rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md shadow-xl space-y-1 text-xs select-none"
+          >
+            {!editor.isActive("table") ? (
+              <div className="space-y-1.5 p-1">
+                <div className="font-semibold text-foreground text-xs">Insert Table</div>
+                <p className="text-[11px] text-muted-foreground">Add a clean data table with header row to your post.</p>
+                <Button
+                  type="button"
+                  size="sm"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+                    toast.success("Inserted 3x3 Table");
+                  }}
+                  className="w-full bg-accent text-accent-foreground text-xs font-semibold h-7 mt-1"
+                >
+                  Insert 3x3 Table
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <div className="font-semibold text-[11px] text-muted-foreground px-2 py-0.5">
+                  Table Actions
+                </div>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => editor.chain().focus().addRowBefore().run()}
+                  className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-muted text-foreground text-xs transition-colors cursor-pointer"
+                >
+                  <span>Add Row Above</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">+row</span>
+                </button>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => editor.chain().focus().addRowAfter().run()}
+                  className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-muted text-foreground text-xs transition-colors cursor-pointer"
+                >
+                  <span>Add Row Below</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">+row</span>
+                </button>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => editor.chain().focus().deleteRow().run()}
+                  className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-destructive/10 text-destructive text-xs transition-colors cursor-pointer"
+                >
+                  <span>Delete Row</span>
+                  <span className="text-[10px] text-destructive/80 font-mono">-row</span>
+                </button>
+
+                <div className="w-full h-[1px] bg-border/60 my-1" />
+
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => editor.chain().focus().addColumnBefore().run()}
+                  className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-muted text-foreground text-xs transition-colors cursor-pointer"
+                >
+                  <span>Add Column Left</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">+col</span>
+                </button>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => editor.chain().focus().addColumnAfter().run()}
+                  className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-muted text-foreground text-xs transition-colors cursor-pointer"
+                >
+                  <span>Add Column Right</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">+col</span>
+                </button>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => editor.chain().focus().deleteColumn().run()}
+                  className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-destructive/10 text-destructive text-xs transition-colors cursor-pointer"
+                >
+                  <span>Delete Column</span>
+                  <span className="text-[10px] text-destructive/80 font-mono">-col</span>
+                </button>
+
+                <div className="w-full h-[1px] bg-border/60 my-1" />
+
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => editor.chain().focus().toggleHeaderRow().run()}
+                  className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-muted text-foreground text-xs transition-colors cursor-pointer"
+                >
+                  <span>Toggle Header Row</span>
+                  <span className="text-[10px] text-accent font-mono">th/td</span>
+                </button>
+
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    editor.chain().focus().deleteTable().run();
+                    toast.info("Table removed");
+                  }}
+                  className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-destructive/15 text-destructive font-semibold text-xs transition-colors cursor-pointer"
+                >
+                  <span>Delete Table</span>
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </PopoverContent>
+        </Popover>
+
+        <div className="w-[1px] h-5 bg-border/80 mx-1" />
+
         {/* Clear formatting & Full screen */}
         <div className="flex items-center gap-0.5 ml-auto">
           <ToolbarButton
@@ -992,8 +1148,8 @@ export default function TiptapEditor({ content, onChange, postId, onEditorReady 
         </div>
       </div>
 
-      {/* Editor Content Area */}
-      <div className={`overflow-y-auto ${isFullScreen ? "flex-1 p-8 max-w-4xl mx-auto w-full" : ""}`}>
+      {/* Editor Content Area with Dedicated Long-Text Scroller */}
+      <div className={`overflow-y-auto ${isFullScreen ? "flex-1 p-8 max-w-4xl mx-auto w-full" : "max-h-[680px] custom-editor-scrollbar"}`}>
         <EditorContent editor={editor} />
       </div>
 

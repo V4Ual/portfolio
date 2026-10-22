@@ -743,7 +743,7 @@ export default function PostEditor({ initialData }: PostEditorProps) {
             <ArticleCodeEnhancer>
               <div
                 className="max-w-none text-foreground leading-relaxed tiptap-rendered-content blog-content-body"
-                dangerouslySetInnerHTML={{ __html: content }}
+                dangerouslySetInnerHTML={{ __html: editorRef.current ? editorRef.current.getHTML() : content }}
               />
             </ArticleCodeEnhancer>
           </div>
