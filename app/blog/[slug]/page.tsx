@@ -35,6 +35,39 @@ function injectHeadingIds(html: string): string {
   });
 }
 
+function wrapTablesInResponsiveWrapper(html: string): string {
+  if (!html) return "";
+  return html.replace(/<table(?:\s+[^>]*)?>[\s\S]*?<\/table>/gi, (tableMatch, offset, fullString) => {
+    // Strip hardcoded desktop pixel widths from col elements and cells so columns auto-manage size evenly
+    let cleanedTable = tableMatch
+      .replace(/<col[^>]*style=["'][^"']*width:[^"']*["'][^>]*>/gi, "<col>")
+      .replace(/<col[^>]*width=["'][^"']*["'][^>]*>/gi, "<col>")
+      .replace(/(<(?:td|th)[^>]*?)\s*colwidth=["'][^"']*["']/gi, "$1")
+      .replace(/(<(?:td|th)[^>]*?)\s*style=["'][^"']*width:[^"']*["']/gi, "$1");
+
+    // Detect column count from the first <tr> row
+    const firstRowMatch = cleanedTable.match(/<tr(?:\s+[^>]*)?>([\s\S]*?)<\/tr>/i);
+    let colCount = 0;
+    if (firstRowMatch && firstRowMatch[1]) {
+      const cellMatches = firstRowMatch[1].match(/<(?:td|th)(?:\s+[^>]*)?>/gi);
+      colCount = cellMatches ? cellMatches.length : 0;
+    }
+
+    // Set responsive min-width: if many columns (> 3), allow comfortable horizontal scroll
+    if (colCount > 3) {
+      cleanedTable = cleanedTable.replace(/<table/i, `<table style="min-width: ${colCount * 140}px"`);
+    } else {
+      cleanedTable = cleanedTable.replace(/<table/i, `<table style="min-width: 100%"`);
+    }
+
+    const before = fullString.slice(0, offset);
+    if (/class=["'][^"']*table-responsive-wrapper[^"']*["'][^>]*>\s*$/i.test(before)) {
+      return cleanedTable;
+    }
+    return `<div class="table-responsive-wrapper">${cleanedTable}</div>`;
+  });
+}
+
 export const revalidate = 60;
 
 const getPost = cache(async (slug: string) => {
@@ -156,7 +189,9 @@ export default async function BlogDetailsPage({
   };
 
   const isHtmlContent = post.content.trim().startsWith("<");
-  const enhancedContent = isHtmlContent ? injectHeadingIds(post.content) : post.content;
+  const enhancedContent = isHtmlContent
+    ? wrapTablesInResponsiveWrapper(injectHeadingIds(post.content))
+    : post.content;
 
   return (
     <div className="min-h-screen bg-background text-foreground bg-ambient-mesh flex flex-col justify-between relative overflow-x-clip">
@@ -273,7 +308,16 @@ export default async function BlogDetailsPage({
                   />
                 ) : (
                   <div className="blog-content-body">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        table: ({ ...props }) => (
+                          <div className="table-responsive-wrapper">
+                            <table {...props} />
+                          </div>
+                        ),
+                      }}
+                    >
                       {post.content}
                     </ReactMarkdown>
                   </div>

@@ -1202,6 +1202,51 @@ export default function TiptapEditor({ content, onChange, postId, onEditorReady 
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => {
+                    const { state, dispatch } = editor.view;
+                    const { tr, selection } = state;
+                    let tablePos = -1;
+                    let tableNode: any = null;
+
+                    state.doc.nodesBetween(0, state.doc.content.size, (node, pos) => {
+                      if (node.type.name === "table") {
+                        if (selection.from >= pos && selection.to <= pos + node.nodeSize) {
+                          tablePos = pos;
+                          tableNode = node;
+                          return false;
+                        }
+                      }
+                    });
+
+                    if (tableNode && tablePos !== -1) {
+                      let updatedTr = tr;
+                      tableNode.descendants((childNode: any, childPos: number) => {
+                        if (childNode.type.name === "tableCell" || childNode.type.name === "tableHeader") {
+                          if (childNode.attrs.colwidth) {
+                            updatedTr = updatedTr.setNodeMarkup(tablePos + 1 + childPos, undefined, {
+                              ...childNode.attrs,
+                              colwidth: null,
+                            });
+                          }
+                        }
+                      });
+                      dispatch(updatedTr);
+                      toast.success("Table column sizes auto-managed!");
+                    } else {
+                      toast.info("Click inside a table first");
+                    }
+                  }}
+                  className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-muted text-foreground text-xs transition-colors cursor-pointer"
+                >
+                  <span>Auto Manage Size</span>
+                  <span className="text-[10px] text-accent font-mono">auto</span>
+                </button>
+
+                <div className="w-full h-[1px] bg-border/60 my-1" />
+
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
                     editor.chain().focus().deleteTable().run();
                     toast.info("Table removed");
                   }}

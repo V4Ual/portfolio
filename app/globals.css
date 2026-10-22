@@ -461,16 +461,80 @@ mark,
   background: var(--accent);
 }
 
-/* Enhanced Table Styling in Editor & Public Blog */
+/* Enhanced Responsive Table Styling in Editor & Public Blog */
+.table-responsive-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 2rem 0;
+  border-radius: 0.875rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+.table-responsive-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+.table-responsive-wrapper::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+.table-responsive-wrapper::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+.table-responsive-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+.table-responsive-wrapper table {
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  display: table !important;
+  width: 100% !important;
+  min-width: 100%;
+  table-layout: fixed !important;
+}
+
 .tiptap-rendered-content table,
 .blog-content-body table {
   width: 100%;
+  min-width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  margin: 2rem 0;
   font-size: 0.925rem;
-  border-radius: 0.75rem;
-  overflow: hidden;
+  table-layout: fixed !important;
+}
+
+/* Clear hardcoded widths so columns auto-manage their sizes evenly across the table */
+.table-responsive-wrapper col,
+.tiptap-rendered-content col,
+.blog-content-body col {
+  width: auto !important;
+}
+
+.table-responsive-wrapper th,
+.tiptap-rendered-content th,
+.blog-content-body th,
+.table-responsive-wrapper td,
+.tiptap-rendered-content td,
+.blog-content-body td {
+  width: auto !important;
+}
+
+/* Standalone table fallback if rendered without wrapper */
+.tiptap-rendered-content > table,
+.blog-content-body > table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 2rem 0;
+  border-radius: 0.875rem;
   border: 1px solid var(--border);
   box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.05);
 }
@@ -480,11 +544,15 @@ mark,
   background: var(--muted);
   font-weight: 700;
   color: var(--foreground);
-  padding: 0.85rem 1.1rem;
+  padding: 0.85rem 1.15rem;
   border-bottom: 2px solid var(--border);
   border-right: 1px solid var(--border);
   text-align: left;
   letter-spacing: -0.01em;
+  word-break: normal !important;
+  overflow-wrap: break-word;
+  vertical-align: top;
+  min-width: 130px;
 }
 
 .tiptap-rendered-content th:last-child,
@@ -494,12 +562,16 @@ mark,
 
 .tiptap-rendered-content td,
 .blog-content-body td {
-  padding: 0.8rem 1.1rem;
+  padding: 0.85rem 1.15rem;
   border-bottom: 1px solid var(--border);
   border-right: 1px solid var(--border);
   text-align: left;
   line-height: 1.6;
   color: var(--foreground);
+  word-break: normal !important;
+  overflow-wrap: break-word;
+  vertical-align: top;
+  min-width: 130px;
 }
 
 .tiptap-rendered-content td:last-child,
@@ -520,6 +592,13 @@ mark,
 .tiptap-rendered-content tr:hover td,
 .blog-content-body tr:hover td {
   background: color-mix(in oklch, var(--muted) 60%, transparent);
+}
+
+.tiptap-rendered-content td code,
+.blog-content-body td code,
+.tiptap-rendered-content th code,
+.blog-content-body th code {
+  white-space: nowrap;
 }
 
 /* Selected cell in Tiptap editor */

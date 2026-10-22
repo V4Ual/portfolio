@@ -244,6 +244,39 @@ export function ArticleCodeEnhancer({ children }: ArticleCodeEnhancerProps) {
 
       pre.insertBefore(header, pre.firstChild);
     });
+
+    // Ensure all tables in post body are wrapped in a responsive scroll container with auto-managed column sizes
+    const tableElements = containerRef.current.querySelectorAll("table");
+    tableElements.forEach((table) => {
+      // Strip hardcoded pixel widths from cols and cells so columns distribute evenly
+      const cols = table.querySelectorAll("col");
+      cols.forEach((col) => {
+        col.removeAttribute("style");
+        col.removeAttribute("width");
+      });
+      const cells = table.querySelectorAll("th, td");
+      cells.forEach((cell) => {
+        cell.removeAttribute("colwidth");
+        if (cell instanceof HTMLElement && cell.style.width) {
+          cell.style.width = "";
+        }
+      });
+
+      const firstRow = table.querySelector("tr");
+      const colCount = firstRow ? firstRow.children.length : cols.length;
+      if (colCount > 3) {
+        table.style.minWidth = `${colCount * 140}px`;
+      } else {
+        table.style.minWidth = "100%";
+      }
+
+      if (!table.closest(".table-responsive-wrapper")) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "table-responsive-wrapper";
+        table.parentNode?.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+      }
+    });
   }, [children]);
 
   return <div ref={containerRef}>{children}</div>;
